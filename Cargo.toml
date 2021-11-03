@@ -7,3 +7,5 @@ edition = "2018"
 
 [dependencies]
 ta = "0.4.0"
+csv = "1.1"
+serde = { version = "1", features = ["derive"] }

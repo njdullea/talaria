@@ -23,15 +23,43 @@ fn backtest_rsi() -> Result<(), Box<dyn Error>> {
 	let contents = fs::read_to_string("data/AMZN.csv").expect("Something went wrong reading the file.");
     let mut rdr = csv::Reader::from_reader(contents.as_bytes());
     let mut rsi_trader = RSITrader::new(14).unwrap();
+    
+    // Total amount of stock currently owned.
+    let mut stock_qty = 0.0;
+    // Amount to stock to trade during each exchange.
+    let trade_qty = 2.0;
+    // Total amount of fiat money that can be spent during each exchange.
+    let mut fiat_total = 10000.0;
+    println!("Starting stock qty: {:?}", stock_qty);
+    println!("Starting fiat_total: {:?}", fiat_total);
 
     for record in rdr.deserialize() {
         let record: Record = record?;
 
         match rsi_trader.next(record.close) {
-            Some(action) => println!("Time to {:?}", action),
-            None => println!("Wait..."),
+            Some(action) => {
+                println!("Time to {:?}", action);
+                match action {
+                    MarketActionType::Buy => {
+                        let cost = trade_qty * record.close;
+                        fiat_total = fiat_total - cost;
+                        stock_qty = stock_qty + trade_qty;
+                    },
+                    MarketActionType::Sell => {
+                        let cost = trade_qty * record.close;
+                        fiat_total = fiat_total + cost;
+                        stock_qty = stock_qty - trade_qty;
+                    },
+                }
+            println!("New stock qty: {:?}", stock_qty);
+            println!("New fiat_total: {:?}", fiat_total);
+            },
+            None => (),
         }
     };
+
+    println!("Ending stock qty: {:?}", stock_qty);
+    println!("Ending fiat_total: {:?}", fiat_total);
 
 	Ok(())
 }

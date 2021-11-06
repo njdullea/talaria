@@ -2,7 +2,7 @@ use ta::indicators::SlowStochastic;
 use ta::DataItem;
 use ta::{Close, Next};
 use crate::market::{Trade, MarketAction};
-use crate::description::Description;
+use crate::traits::{Description};
 
 pub struct SSOTrader {
     sso: SlowStochastic,
@@ -29,6 +29,12 @@ impl SSOTrader {
             }),
         }
     }
+	
+	pub fn reset(&mut self) {
+		self.sso = SlowStochastic::new(self.period, 3).unwrap();
+		self.count = 0;
+		self.in_position = false;
+	}
 }
 
 impl Trade for &mut SSOTrader {

@@ -1,13 +1,13 @@
 mod record;
 mod traders;
 mod market;
-mod description;
+mod traits;
 
 use std::error::Error;
 use std::fs;
 use ta::DataItem;
 
-use crate::description::Description;
+use crate::traits::Description;
 use crate::record::Record;
 use crate::traders::relative_strength_index::RSITrader;
 use crate::traders::fast_stochastic_oscillator::FSOTrader;
@@ -16,28 +16,49 @@ use crate::market::{Trade, MarketAction};
 
 fn main() {
     let mut rsi_trader = RSITrader::new(14).unwrap();
-    match backtest(&mut rsi_trader) {
+    match backtest(&mut rsi_trader, "data/AMZN.csv") {
         Ok(_) => println!("Ok"),
         Err(_) => println!("Err"),
     }
 
     let mut fso_trader = FSOTrader::new(14).unwrap();
-    match backtest(&mut fso_trader) {
+    match backtest(&mut fso_trader, "data/AMZN.csv") {
         Ok(_) => println!("Ok"),
         Err(_) => println!("Err"),
     }
 
     let mut sso_trader = SSOTrader::new(14).unwrap();
-    match backtest(&mut sso_trader) {
+    match backtest(&mut sso_trader, "data/AMZN.csv") {
+        Ok(_) => println!("Ok"),
+        Err(_) => println!("Err"),
+    }
+
+    // let mut rsi_trader2 = RSITrader::new(14).unwrap();
+    rsi_trader.reset();
+    match backtest(&mut rsi_trader, "data/XLM-USD.csv") {
+        Ok(_) => println!("Ok"),
+        Err(_) => println!("Err"),
+    }
+
+    // let mut fso_trader2 = FSOTrader::new(14).unwrap();
+    fso_trader.reset();
+    match backtest(&mut fso_trader, "data/XLM-USD.csv") {
+        Ok(_) => println!("Ok"),
+        Err(_) => println!("Err"),
+    }
+
+    // let mut sso_trader2 = SSOTrader::new(14).unwrap();
+    sso_trader.reset();
+    match backtest(&mut sso_trader, "data/XLM-USD.csv") {
         Ok(_) => println!("Ok"),
         Err(_) => println!("Err"),
     }
 }
 
-fn backtest(mut trader: impl Trade + Description) -> Result<(), Box<dyn Error>> {
+fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), Box<dyn Error>> {
     println!("Executing {:?}", trader.description());
     let contents =
-        fs::read_to_string("data/AMZN.csv").expect("Something went wrong reading the file.");
+        fs::read_to_string(filename).expect("Something went wrong reading the file.");
     let mut rdr = csv::Reader::from_reader(contents.as_bytes());
     let mut stock_qty = 0.0;
     let trade_qty = 2.0;

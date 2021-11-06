@@ -2,7 +2,7 @@ use ta::indicators::RelativeStrengthIndex;
 use ta::DataItem;
 use ta::{Close, Next};
 use crate::market::{Trade, MarketAction};
-use crate::description::Description;
+use crate::traits::{Description};
 
 pub struct RSITrader {
     rsi: RelativeStrengthIndex,
@@ -29,6 +29,12 @@ impl RSITrader {
             }),
         }
     }
+	
+	pub fn reset(&mut self) {
+		self.rsi = RelativeStrengthIndex::new(self.period).unwrap();
+		self.count = 0;
+		self.in_position = false;
+	}
 }
 
 impl Trade for &mut RSITrader {

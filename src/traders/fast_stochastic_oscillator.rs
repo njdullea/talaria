@@ -2,7 +2,7 @@ use ta::indicators::FastStochastic;
 use ta::DataItem;
 use ta::{Close, Next};
 use crate::market::{Trade, MarketAction};
-use crate::description::Description;
+use crate::traits::{Description, Reset};
 
 pub struct FSOTrader {
     fso: FastStochastic,
@@ -29,6 +29,12 @@ impl FSOTrader {
             }),
         }
     }
+	
+	pub fn reset(&mut self) {
+		self.fso = FastStochastic::new(self.period).unwrap();
+		self.count = 0;
+		self.in_position = false;
+	}
 }
 
 impl Trade for &mut FSOTrader {

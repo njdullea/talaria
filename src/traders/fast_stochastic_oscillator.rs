@@ -2,6 +2,7 @@ use ta::indicators::FastStochastic;
 use ta::DataItem;
 use ta::{Close, Next};
 use crate::market::{Trade, MarketAction};
+use crate::description::Description;
 
 pub struct FSOTrader {
     fso: FastStochastic,
@@ -10,6 +11,7 @@ pub struct FSOTrader {
     overbought: usize,
     oversold: usize,
     in_position: bool,
+	description: &'static str,
 }
 
 impl FSOTrader {
@@ -23,6 +25,7 @@ impl FSOTrader {
                 overbought: 80,
                 oversold: 20,
                 in_position: false,
+				description: "FSO Trader",
             }),
         }
     }
@@ -45,4 +48,10 @@ impl Trade for &mut FSOTrader {
 
         None
     }
+}
+
+impl Description for &mut FSOTrader {
+	fn description(&self) -> &str {
+		self.description
+	}
 }

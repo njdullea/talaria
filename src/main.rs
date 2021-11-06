@@ -1,15 +1,17 @@
-
 mod record;
 mod traders;
 mod market;
+mod description;
 
 use std::error::Error;
 use std::fs;
 use ta::DataItem;
 
+use crate::description::Description;
 use crate::record::Record;
 use crate::traders::relative_strength_index::RSITrader;
 use crate::traders::fast_stochastic_oscillator::FSOTrader;
+use crate::traders::slow_stochastic_oscillator::SSOTrader;
 use crate::market::{Trade, MarketAction};
 
 fn main() {
@@ -24,9 +26,16 @@ fn main() {
         Ok(_) => println!("Ok"),
         Err(_) => println!("Err"),
     }
+
+    let mut sso_trader = SSOTrader::new(14).unwrap();
+    match backtest(&mut sso_trader) {
+        Ok(_) => println!("Ok"),
+        Err(_) => println!("Err"),
+    }
 }
 
-fn backtest(mut trader: impl Trade) -> Result<(), Box<dyn Error>> {
+fn backtest(mut trader: impl Trade + Description) -> Result<(), Box<dyn Error>> {
+    println!("Executing {:?}", trader.description());
     let contents =
         fs::read_to_string("data/AMZN.csv").expect("Something went wrong reading the file.");
     let mut rdr = csv::Reader::from_reader(contents.as_bytes());
@@ -34,8 +43,6 @@ fn backtest(mut trader: impl Trade) -> Result<(), Box<dyn Error>> {
     let trade_qty = 2.0;
     let mut fiat_total = 10000.0;
     let mut last_price = 0.0;
-    println!("Starting stock qty: {:?}", stock_qty);
-    println!("Starting fiat_total: {:?}", fiat_total);
 
     for record in rdr.deserialize() {
         let record: Record = record?;
@@ -52,7 +59,6 @@ fn backtest(mut trader: impl Trade) -> Result<(), Box<dyn Error>> {
 
         match trader.trade(data_item) {
             Some(action) => {
-                println!("Time to {:?}", action);
                 match action {
                     MarketAction::Buy => {
                         let cost = trade_qty * record.close;
@@ -70,10 +76,8 @@ fn backtest(mut trader: impl Trade) -> Result<(), Box<dyn Error>> {
         }
     }
 
-    println!("Ending stock qty: {:?}", stock_qty);
-    println!("Ending fiat_total: {:?}", fiat_total);
     let total_value = fiat_total + (stock_qty * last_price);
-    println!("Total value: {:?}", total_value);
+    println!("Final value: {:?}", total_value);
 
     Ok(())
 }

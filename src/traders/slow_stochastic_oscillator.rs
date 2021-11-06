@@ -1,11 +1,11 @@
-use ta::indicators::RelativeStrengthIndex;
+use ta::indicators::SlowStochastic;
 use ta::DataItem;
 use ta::{Close, Next};
 use crate::market::{Trade, MarketAction};
 use crate::description::Description;
 
-pub struct RSITrader {
-    rsi: RelativeStrengthIndex,
+pub struct SSOTrader {
+    sso: SlowStochastic,
     count: usize,
     period: usize,
     overbought: usize,
@@ -14,33 +14,33 @@ pub struct RSITrader {
 	description: &'static str,
 }
 
-impl RSITrader {
+impl SSOTrader {
     pub fn new(period: usize) -> Result<Self, &'static str> {
         match period {
             0 => Err("Invalid parameter: period for RSITrader must be greater than 0."),
             _ => Ok(Self {
-                rsi: RelativeStrengthIndex::new(period).unwrap(),
+                sso: SlowStochastic::new(period, 3).unwrap(),
                 period,
                 count: 0,
-                overbought: 70,
-                oversold: 30,
+                overbought: 80,
+                oversold: 20,
                 in_position: false,
-				description: "RSI Trader",
+				description: "SSO Trader",
             }),
         }
     }
 }
 
-impl Trade for &mut RSITrader {
+impl Trade for &mut SSOTrader {
     fn trade(&mut self, data_item: DataItem) -> Option<MarketAction> {
-        let rsi = self.rsi.next(data_item.close());
+        let sso = self.sso.next(data_item.close());
         self.count = self.count + 1;
 
         if self.count > self.period {
-            if (rsi < self.oversold as f64) && !self.in_position {
+            if (sso < self.oversold as f64) && !self.in_position {
                 self.in_position = true;
                 return Some(MarketAction::Buy);
-            } else if (rsi > self.overbought as f64) && self.in_position {
+            } else if (sso > self.overbought as f64) && self.in_position {
                 self.in_position = false;
                 return Some(MarketAction::Sell);
             }
@@ -50,7 +50,7 @@ impl Trade for &mut RSITrader {
     }
 }
 
-impl Description for &mut RSITrader {
+impl Description for &mut SSOTrader {
 	fn description(&self) -> &str {
 		self.description
 	}

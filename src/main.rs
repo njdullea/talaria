@@ -18,10 +18,11 @@ use crate::traits::Description;
 fn main() {
     let datasets = vec![
         "data/AMZN.csv",
-        "data/SHIB-USD.csv",
-        "data/XLM-USD.csv",
-        "data/ADA-USD.csv",
-        "data/Binance_XLMUSDT_minute.csv",
+        "data/PFE.csv",
+        // "data/SHIB-USD.csv",
+        // "data/XLM-USD.csv",
+        // "data/ADA-USD.csv",
+        // "data/Binance_XLMUSDT_minute.csv",
     ];
     let mut rsi_trader = RSITrader::new(14).unwrap();
     let mut fso_trader = FSOTrader::new(14).unwrap();
@@ -29,20 +30,20 @@ fn main() {
     let mut ppo_trader = PPOTrader::new(12, 26, 9).unwrap();
 
     for dataset in datasets {
-        // match backtest(&mut rsi_trader, dataset) {
-        //     Ok(_) => println!("Ok"),
-        //     Err(_) => println!("Err"),
-        // }
+        match backtest(&mut rsi_trader, dataset) {
+            Ok(_) => println!("Ok"),
+            Err(_) => println!("Err"),
+        }
 
-        // match backtest(&mut fso_trader, dataset) {
-        //     Ok(_) => println!("Ok"),
-        //     Err(_) => println!("Err"),
-        // }
+        match backtest(&mut fso_trader, dataset) {
+            Ok(_) => println!("Ok"),
+            Err(_) => println!("Err"),
+        }
 
-        // match backtest(&mut sso_trader, dataset) {
-        //     Ok(_) => println!("Ok"),
-        //     Err(_) => println!("Err"),
-        // }
+        match backtest(&mut sso_trader, dataset) {
+            Ok(_) => println!("Ok"),
+            Err(_) => println!("Err"),
+        }
 
         match backtest(&mut ppo_trader, dataset) {
             Ok(_) => println!("Ok"),
@@ -66,12 +67,20 @@ fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), 
     let mut rdr = csv::Reader::from_reader(contents.as_bytes());
     let mut stock_qty = 0.0;
     let trade_qty = 2.0;
+    let starting_fiat_total = 10000.0;
     let mut fiat_total = 10000.0;
     let mut last_price = 0.0;
+    let mut first_item = true;
+    let mut first_price = 0.0;
 
     for record in rdr.deserialize() {
         let record: Record = record?;
         last_price = record.close;
+
+        if first_item {
+            first_price = record.open;
+            first_item = false;
+        }
 
         let data_item = DataItem::builder()
             .close(record.close)
@@ -101,6 +110,11 @@ fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), 
             None => (),
         }
     }
+
+    let hodl_qty = (starting_fiat_total / first_price).floor();
+    let hodl_fiat_rem = starting_fiat_total - (hodl_qty * first_price);
+    let hodl_total_value = hodl_fiat_rem + (hodl_qty * last_price);
+    println!("Final hodl value: {:?}", hodl_total_value);
 
     let total_value = fiat_total + (stock_qty * last_price);
     println!("Final value: {:?}", total_value);

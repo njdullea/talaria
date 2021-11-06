@@ -33,23 +33,38 @@ fn main() {
         Err(_) => println!("Err"),
     }
 
-    // let mut rsi_trader2 = RSITrader::new(14).unwrap();
     rsi_trader.reset();
     match backtest(&mut rsi_trader, "data/XLM-USD.csv") {
         Ok(_) => println!("Ok"),
         Err(_) => println!("Err"),
     }
 
-    // let mut fso_trader2 = FSOTrader::new(14).unwrap();
     fso_trader.reset();
     match backtest(&mut fso_trader, "data/XLM-USD.csv") {
         Ok(_) => println!("Ok"),
         Err(_) => println!("Err"),
     }
 
-    // let mut sso_trader2 = SSOTrader::new(14).unwrap();
     sso_trader.reset();
     match backtest(&mut sso_trader, "data/XLM-USD.csv") {
+        Ok(_) => println!("Ok"),
+        Err(_) => println!("Err"),
+    }
+
+    rsi_trader.reset();
+    match backtest(&mut rsi_trader, "data/ADA-USD.csv") {
+        Ok(_) => println!("Ok"),
+        Err(_) => println!("Err"),
+    }
+
+    fso_trader.reset();
+    match backtest(&mut fso_trader, "data/ADA-USD.csv") {
+        Ok(_) => println!("Ok"),
+        Err(_) => println!("Err"),
+    }
+
+    sso_trader.reset();
+    match backtest(&mut sso_trader, "data/ADA-USD.csv") {
         Ok(_) => println!("Ok"),
         Err(_) => println!("Err"),
     }

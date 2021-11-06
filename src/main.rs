@@ -16,13 +16,16 @@ use crate::traders::slow_stochastic_oscillator::SSOTrader;
 use crate::traits::Description;
 
 fn main() {
+    // Note: some of these data sets are in reverse chronological order, some chronological order.
+    // This will affect the HODL values in particular.
     let datasets = vec![
         "data/AMZN.csv",
         "data/PFE.csv",
-        // "data/SHIB-USD.csv",
-        // "data/XLM-USD.csv",
-        // "data/ADA-USD.csv",
-        // "data/Binance_XLMUSDT_minute.csv",
+        "data/SHIB-USD.csv",
+        "data/XLM-USD.csv",
+        "data/ADA-USD.csv",
+        "data/Binance_XLMUSDT_minute.csv",
+        "data/Binance_ADAUSDT_minute.csv",
     ];
     let mut rsi_trader = RSITrader::new(14).unwrap();
     let mut fso_trader = FSOTrader::new(14).unwrap();
@@ -66,7 +69,7 @@ fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), 
     let contents = fs::read_to_string(filename).expect("Something went wrong reading the file.");
     let mut rdr = csv::Reader::from_reader(contents.as_bytes());
     let mut stock_qty = 0.0;
-    let trade_qty = 2.0;
+    let mut trade_qty = 20.0;
     let starting_fiat_total = 10000.0;
     let mut fiat_total = 10000.0;
     let mut last_price = 0.0;
@@ -80,6 +83,9 @@ fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), 
         if first_item {
             first_price = record.open;
             first_item = false;
+
+            trade_qty = ((starting_fiat_total / 2.0) / first_price).floor();
+            println!("Trade qty: {:?}", trade_qty);
         }
 
         let data_item = DataItem::builder()
@@ -117,7 +123,8 @@ fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), 
     println!("Final hodl value: {:?}", hodl_total_value);
 
     let total_value = fiat_total + (stock_qty * last_price);
-    println!("Final value: {:?}", total_value);
+    println!("Final trading value: {:?}", total_value);
+    println!("Gains from trading over hodling: {:?}", total_value - hodl_total_value);
 
     Ok(())
 }

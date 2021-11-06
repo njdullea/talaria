@@ -1,8 +1,8 @@
+use crate::market::{MarketAction, Trade};
+use crate::traits::Description;
 use ta::indicators::SlowStochastic;
 use ta::DataItem;
 use ta::{Close, Next};
-use crate::market::{Trade, MarketAction};
-use crate::traits::{Description};
 
 pub struct SSOTrader {
     sso: SlowStochastic,
@@ -11,7 +11,7 @@ pub struct SSOTrader {
     overbought: usize,
     oversold: usize,
     in_position: bool,
-	description: &'static str,
+    description: &'static str,
 }
 
 impl SSOTrader {
@@ -25,16 +25,16 @@ impl SSOTrader {
                 overbought: 80,
                 oversold: 20,
                 in_position: false,
-				description: "SSO Trader",
+                description: "SSO Trader",
             }),
         }
     }
-	
-	pub fn reset(&mut self) {
-		self.sso = SlowStochastic::new(self.period, 3).unwrap();
-		self.count = 0;
-		self.in_position = false;
-	}
+
+    pub fn reset(&mut self) {
+        self.sso = SlowStochastic::new(self.period, 3).unwrap();
+        self.count = 0;
+        self.in_position = false;
+    }
 }
 
 impl Trade for &mut SSOTrader {
@@ -57,7 +57,7 @@ impl Trade for &mut SSOTrader {
 }
 
 impl Description for &mut SSOTrader {
-	fn description(&self) -> &str {
-		self.description
-	}
+    fn description(&self) -> &str {
+        self.description
+    }
 }

@@ -1,37 +1,50 @@
+mod market;
 mod record;
 mod traders;
-mod market;
 mod traits;
 
 use std::error::Error;
 use std::fs;
 use ta::DataItem;
 
-use crate::traits::Description;
+use crate::market::{MarketAction, Trade};
 use crate::record::Record;
-use crate::traders::relative_strength_index::RSITrader;
 use crate::traders::fast_stochastic_oscillator::FSOTrader;
+use crate::traders::percentage_price_oscillator::PPOTrader;
+use crate::traders::relative_strength_index::RSITrader;
 use crate::traders::slow_stochastic_oscillator::SSOTrader;
-use crate::market::{Trade, MarketAction};
+use crate::traits::Description;
 
 fn main() {
-    let datasets = vec!["data/AMZN.csv", "data/SHIB-USD.csv", "data/XLM-USD.csv", "data/ADA-USD.csv"];
+    let datasets = vec![
+        "data/AMZN.csv",
+        "data/SHIB-USD.csv",
+        "data/XLM-USD.csv",
+        "data/ADA-USD.csv",
+        "data/Binance_XLMUSDT_minute.csv",
+    ];
     let mut rsi_trader = RSITrader::new(14).unwrap();
     let mut fso_trader = FSOTrader::new(14).unwrap();
     let mut sso_trader = SSOTrader::new(14).unwrap();
+    let mut ppo_trader = PPOTrader::new(12, 26, 9).unwrap();
 
     for dataset in datasets {
-        match backtest(&mut rsi_trader, dataset) {
-            Ok(_) => println!("Ok"),
-            Err(_) => println!("Err"),
-        }
+        // match backtest(&mut rsi_trader, dataset) {
+        //     Ok(_) => println!("Ok"),
+        //     Err(_) => println!("Err"),
+        // }
 
-        match backtest(&mut fso_trader, dataset) {
-            Ok(_) => println!("Ok"),
-            Err(_) => println!("Err"),
-        }
+        // match backtest(&mut fso_trader, dataset) {
+        //     Ok(_) => println!("Ok"),
+        //     Err(_) => println!("Err"),
+        // }
 
-        match backtest(&mut sso_trader, dataset) {
+        // match backtest(&mut sso_trader, dataset) {
+        //     Ok(_) => println!("Ok"),
+        //     Err(_) => println!("Err"),
+        // }
+
+        match backtest(&mut ppo_trader, dataset) {
             Ok(_) => println!("Ok"),
             Err(_) => println!("Err"),
         }
@@ -39,13 +52,17 @@ fn main() {
         rsi_trader.reset();
         fso_trader.reset();
         sso_trader.reset();
+        ppo_trader.reset();
     }
 }
 
 fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), Box<dyn Error>> {
-    println!("Executing {:?} on dataset {:?}", trader.description(), filename);
-    let contents =
-        fs::read_to_string(filename).expect("Something went wrong reading the file.");
+    println!(
+        "Executing {:?} on dataset {:?}",
+        trader.description(),
+        filename
+    );
+    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file.");
     let mut rdr = csv::Reader::from_reader(contents.as_bytes());
     let mut stock_qty = 0.0;
     let trade_qty = 2.0;
@@ -67,6 +84,7 @@ fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), 
 
         match trader.trade(data_item) {
             Some(action) => {
+                // println!("Time to {:?}", action);
                 match action {
                     MarketAction::Buy => {
                         let cost = trade_qty * record.close;

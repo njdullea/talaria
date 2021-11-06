@@ -1,8 +1,8 @@
+use crate::market::{MarketAction, Trade};
+use crate::traits::Description;
 use ta::indicators::RelativeStrengthIndex;
 use ta::DataItem;
 use ta::{Close, Next};
-use crate::market::{Trade, MarketAction};
-use crate::traits::{Description};
 
 pub struct RSITrader {
     rsi: RelativeStrengthIndex,
@@ -11,7 +11,7 @@ pub struct RSITrader {
     overbought: usize,
     oversold: usize,
     in_position: bool,
-	description: &'static str,
+    description: &'static str,
 }
 
 impl RSITrader {
@@ -25,16 +25,16 @@ impl RSITrader {
                 overbought: 70,
                 oversold: 30,
                 in_position: false,
-				description: "RSI Trader",
+                description: "RSI Trader",
             }),
         }
     }
-	
-	pub fn reset(&mut self) {
-		self.rsi = RelativeStrengthIndex::new(self.period).unwrap();
-		self.count = 0;
-		self.in_position = false;
-	}
+
+    pub fn reset(&mut self) {
+        self.rsi = RelativeStrengthIndex::new(self.period).unwrap();
+        self.count = 0;
+        self.in_position = false;
+    }
 }
 
 impl Trade for &mut RSITrader {
@@ -57,7 +57,7 @@ impl Trade for &mut RSITrader {
 }
 
 impl Description for &mut RSITrader {
-	fn description(&self) -> &str {
-		self.description
-	}
+    fn description(&self) -> &str {
+        self.description
+    }
 }

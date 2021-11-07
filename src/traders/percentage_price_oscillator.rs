@@ -72,3 +72,9 @@ impl Description for &mut PPOTrader {
         self.description
     }
 }
+
+impl Default for PPOTrader {
+    fn default() -> Self {
+        PPOTrader::new(12, 26, 9).unwrap()
+    }
+}

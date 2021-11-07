@@ -61,3 +61,9 @@ impl Description for &mut SSOTrader {
         self.description
     }
 }
+
+impl Default for SSOTrader {
+    fn default() -> Self {
+        SSOTrader::new(14).unwrap()
+    }
+}

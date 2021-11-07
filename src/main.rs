@@ -16,21 +16,20 @@ use crate::traders::slow_stochastic_oscillator::SSOTrader;
 use crate::traits::Description;
 
 fn main() {
-    // Note: some of these data sets are in reverse chronological order, some chronological order.
-    // This will affect the HODL values in particular.
     let datasets = vec![
-        "data/AMZN.csv",
-        "data/PFE.csv",
-        "data/SHIB-USD.csv",
-        "data/XLM-USD.csv",
-        "data/ADA-USD.csv",
+        // "data/AMZN.csv",
+        // "data/PFE.csv",
+        // "data/SHIB-USD.csv",
+        // "data/XLM-USD.csv",
+        // "data/ADA-USD.csv",
         "data/Binance_XLMUSDT_minute.csv",
         "data/Binance_ADAUSDT_minute.csv",
     ];
-    let mut rsi_trader = RSITrader::new(14).unwrap();
-    let mut fso_trader = FSOTrader::new(14).unwrap();
-    let mut sso_trader = SSOTrader::new(14).unwrap();
-    let mut ppo_trader = PPOTrader::new(12, 26, 9).unwrap();
+    // let mut rsi_trader = RSITrader::new(14).unwrap();
+    let mut rsi_trader = RSITrader::default();
+    let mut fso_trader = FSOTrader::default();
+    let mut sso_trader = SSOTrader::default();
+    let mut ppo_trader = PPOTrader::default();
 
     for dataset in datasets {
         match backtest(&mut rsi_trader, dataset) {
@@ -38,20 +37,20 @@ fn main() {
             Err(_) => println!("Err"),
         }
 
-        // match backtest(&mut fso_trader, dataset) {
-        //     Ok(_) => println!("Ok"),
-        //     Err(_) => println!("Err"),
-        // }
+        match backtest(&mut fso_trader, dataset) {
+            Ok(_) => println!("Ok"),
+            Err(_) => println!("Err"),
+        }
 
-        // match backtest(&mut sso_trader, dataset) {
-        //     Ok(_) => println!("Ok"),
-        //     Err(_) => println!("Err"),
-        // }
+        match backtest(&mut sso_trader, dataset) {
+            Ok(_) => println!("Ok"),
+            Err(_) => println!("Err"),
+        }
 
-        // match backtest(&mut ppo_trader, dataset) {
-        //     Ok(_) => println!("Ok"),
-        //     Err(_) => println!("Err"),
-        // }
+        match backtest(&mut ppo_trader, dataset) {
+            Ok(_) => println!("Ok"),
+            Err(_) => println!("Err"),
+        }
 
         rsi_trader.reset();
         fso_trader.reset();
@@ -60,7 +59,7 @@ fn main() {
     }
 }
 
-fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), Box<dyn Error>> {
+fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<((f64, f64)), Box<dyn Error>> {
     println!(
         "Executing {:?} on dataset {:?}",
         trader.description(),
@@ -85,7 +84,6 @@ fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), 
             first_item = false;
 
             trade_qty = ((starting_fiat_total / 2.0) / first_price).floor();
-            println!("Trade qty: {:?}", trade_qty);
         }
 
         let data_item = DataItem::builder()
@@ -122,12 +120,12 @@ fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), 
     let hodl_total_value = hodl_fiat_rem + (hodl_qty * last_price);
     println!("Final hodl value: {:?}", hodl_total_value);
 
-    let total_value = fiat_total + (stock_qty * last_price);
-    println!("Final trading value: {:?}", total_value);
+    let trader_total_value = fiat_total + (stock_qty * last_price);
+    println!("Final trading value: {:?}", trader_total_value);
     println!(
         "Gains from trading over hodling: {:?}",
-        total_value - hodl_total_value
+        trader_total_value - hodl_total_value
     );
 
-    Ok(())
+    Ok((trader_total_value, hodl_total_value))
 }

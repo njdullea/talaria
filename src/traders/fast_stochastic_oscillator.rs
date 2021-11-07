@@ -61,3 +61,9 @@ impl Description for &mut FSOTrader {
         self.description
     }
 }
+
+impl Default for FSOTrader {
+    fn default() -> Self {
+        FSOTrader::new(14).unwrap()
+    }
+}

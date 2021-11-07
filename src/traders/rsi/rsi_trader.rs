@@ -61,3 +61,9 @@ impl Description for &mut RSITrader {
         self.description
     }
 }
+
+impl Default for RSITrader {
+    fn default() -> Self {
+        RSITrader::new(14).unwrap()
+    }
+}

@@ -1,4 +1,3 @@
-mod indicators;
 mod market;
 mod record;
 mod traders;
@@ -12,7 +11,7 @@ use crate::market::{MarketAction, Trade};
 use crate::record::Record;
 use crate::traders::fast_stochastic_oscillator::FSOTrader;
 use crate::traders::percentage_price_oscillator::PPOTrader;
-use crate::traders::relative_strength_index::RSITrader;
+use crate::traders::rsi::rsi_trader::RSITrader;
 use crate::traders::slow_stochastic_oscillator::SSOTrader;
 use crate::traits::Description;
 

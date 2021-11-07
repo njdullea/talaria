@@ -1,12 +1,11 @@
 use crate::market::{MarketAction, Trade};
+use crate::traders::rsi::rsi_indicator::RelativeStrengthIndex;
 use crate::traits::Description;
 use ta::DataItem;
 use ta::Next;
 
-use crate::indicators::rsi_indicator;
-
 pub struct RSITrader {
-    rsi: rsi_indicator::RelativeStrengthIndex,
+    rsi: RelativeStrengthIndex,
     count: usize,
     period: usize,
     overbought: usize,
@@ -20,7 +19,7 @@ impl RSITrader {
         match period {
             0 => Err("Invalid parameter: period for RSITrader must be greater than 0."),
             _ => Ok(Self {
-                rsi: rsi_indicator::RelativeStrengthIndex::new(period),
+                rsi: RelativeStrengthIndex::new(period),
                 period,
                 count: 0,
                 overbought: 70,
@@ -32,7 +31,7 @@ impl RSITrader {
     }
 
     pub fn reset(&mut self) {
-        self.rsi = rsi_indicator::RelativeStrengthIndex::new(self.period);
+        self.rsi = RelativeStrengthIndex::new(self.period);
         self.count = 0;
         self.in_position = false;
     }

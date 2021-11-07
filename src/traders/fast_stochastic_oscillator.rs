@@ -1,5 +1,5 @@
 use crate::market::{MarketAction, Trade};
-use crate::traits::{Description, Reset};
+use crate::traits::Description;
 use ta::indicators::FastStochastic;
 use ta::DataItem;
 use ta::{Close, Next};

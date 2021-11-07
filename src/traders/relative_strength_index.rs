@@ -1,10 +1,8 @@
 use crate::market::{MarketAction, Trade};
 use crate::traits::Description;
-use ta::indicators::RelativeStrengthIndex;
 use ta::DataItem;
-use ta::{Close, Next};
+use ta::Next;
 
-// TODO: swap out rsi indicators and compare results
 use crate::indicators::rsi_indicator;
 
 pub struct RSITrader {

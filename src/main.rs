@@ -125,7 +125,10 @@ fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<(), 
 
     let total_value = fiat_total + (stock_qty * last_price);
     println!("Final trading value: {:?}", total_value);
-    println!("Gains from trading over hodling: {:?}", total_value - hodl_total_value);
+    println!(
+        "Gains from trading over hodling: {:?}",
+        total_value - hodl_total_value
+    );
 
     Ok(())
 }

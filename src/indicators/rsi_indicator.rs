@@ -1,7 +1,7 @@
 use ta::indicators::ExponentialMovingAverage as Ema;
+use ta::Close;
 use ta::DataItem;
 use ta::Next;
-use ta::Close;
 
 pub struct RelativeStrengthIndex {
     prev_close: f64,
@@ -33,7 +33,7 @@ impl Next<DataItem> for RelativeStrengthIndex {
 
         if self.count == 0 {
             self.prev_close = input.close();
-            return None
+            return None;
         }
 
         let mut up = 0.0;
@@ -45,7 +45,6 @@ impl Next<DataItem> for RelativeStrengthIndex {
             down = self.prev_close - input.close();
         }
 
-        
         let gain = self.average_gain.next(up);
         let loss = self.average_loss.next(down);
         self.prev_close = input.close();
@@ -53,12 +52,12 @@ impl Next<DataItem> for RelativeStrengthIndex {
         if self.count > self.period {
             if loss == 0_f64 {
                 self.rsi = Some(100_f64);
-                return Some(100_f64)
+                return Some(100_f64);
             }
 
             let rsi = 100_f64 - (100_f64 / (1_f64 + (gain / loss)));
             self.rsi = Some(rsi);
-            return Some(rsi)
+            return Some(rsi);
         }
 
         None

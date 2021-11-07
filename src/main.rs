@@ -1,3 +1,4 @@
+mod indicators;
 mod market;
 mod record;
 mod traders;
@@ -38,20 +39,20 @@ fn main() {
             Err(_) => println!("Err"),
         }
 
-        match backtest(&mut fso_trader, dataset) {
-            Ok(_) => println!("Ok"),
-            Err(_) => println!("Err"),
-        }
+        // match backtest(&mut fso_trader, dataset) {
+        //     Ok(_) => println!("Ok"),
+        //     Err(_) => println!("Err"),
+        // }
 
-        match backtest(&mut sso_trader, dataset) {
-            Ok(_) => println!("Ok"),
-            Err(_) => println!("Err"),
-        }
+        // match backtest(&mut sso_trader, dataset) {
+        //     Ok(_) => println!("Ok"),
+        //     Err(_) => println!("Err"),
+        // }
 
-        match backtest(&mut ppo_trader, dataset) {
-            Ok(_) => println!("Ok"),
-            Err(_) => println!("Err"),
-        }
+        // match backtest(&mut ppo_trader, dataset) {
+        //     Ok(_) => println!("Ok"),
+        //     Err(_) => println!("Err"),
+        // }
 
         rsi_trader.reset();
         fso_trader.reset();

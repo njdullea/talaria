@@ -4,8 +4,11 @@ use ta::indicators::RelativeStrengthIndex;
 use ta::DataItem;
 use ta::{Close, Next};
 
+// TODO: swap out rsi indicators and compare results
+use crate::indicators::rsi_indicator;
+
 pub struct RSITrader {
-    rsi: RelativeStrengthIndex,
+    rsi: rsi_indicator::RelativeStrengthIndex,
     count: usize,
     period: usize,
     overbought: usize,
@@ -19,7 +22,7 @@ impl RSITrader {
         match period {
             0 => Err("Invalid parameter: period for RSITrader must be greater than 0."),
             _ => Ok(Self {
-                rsi: RelativeStrengthIndex::new(period).unwrap(),
+                rsi: rsi_indicator::RelativeStrengthIndex::new(period),
                 period,
                 count: 0,
                 overbought: 70,
@@ -31,7 +34,7 @@ impl RSITrader {
     }
 
     pub fn reset(&mut self) {
-        self.rsi = RelativeStrengthIndex::new(self.period).unwrap();
+        self.rsi = rsi_indicator::RelativeStrengthIndex::new(self.period);
         self.count = 0;
         self.in_position = false;
     }
@@ -39,14 +42,14 @@ impl RSITrader {
 
 impl Trade for &mut RSITrader {
     fn trade(&mut self, data_item: DataItem) -> Option<MarketAction> {
-        let rsi = self.rsi.next(data_item.close());
+        let rsi = self.rsi.next(data_item);
         self.count = self.count + 1;
 
-        if self.count > self.period {
-            if (rsi < self.oversold as f64) && !self.in_position {
+        if self.count > self.period && rsi.is_some() {
+            if (rsi.unwrap() < self.oversold as f64) && !self.in_position {
                 self.in_position = true;
                 return Some(MarketAction::Buy);
-            } else if (rsi > self.overbought as f64) && self.in_position {
+            } else if (rsi.unwrap() > self.overbought as f64) && self.in_position {
                 self.in_position = false;
                 return Some(MarketAction::Sell);
             }

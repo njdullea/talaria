@@ -78,6 +78,8 @@ fn get_testing_data(
         end.timestamp_millis() as u64,
     )?;
 
+    // TODO: time to add kraken, see if there are any ops there.
+
     match binance_klines {
         binance::model::KlineSummaries::AllKlineSummaries(klines) => {
             for b_kline in klines {
@@ -89,8 +91,9 @@ fn get_testing_data(
 
                 let diff = (binance_close - coinbase_close).abs();
 
+
                 if diff > 0.001 {
-                    println!("WE FOUND AN OP WE FOUND AN OP WE FOUND AN OP: {:?}", diff);
+                    println!("WE FOUND AN OP woth num of cents {:?}", diff * 100.0);
                 }
             }
         }

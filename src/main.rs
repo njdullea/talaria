@@ -1,3 +1,4 @@
+mod local_env;
 mod market;
 mod record;
 mod traders;
@@ -16,6 +17,20 @@ use crate::traders::slow_stochastic_oscillator::SSOTrader;
 use crate::traits::Description;
 
 fn main() {
+
+    match market::setup_testing_data() {
+        Ok(value) => {
+            
+        },
+        Err(e) => {
+            println!("E: {:?}", e);
+        }
+    }
+
+    // backtest_indicator_traders();
+}
+
+fn backtest_indicator_traders() {
     let datasets = vec![
         // "data/AMZN.csv",
         // "data/PFE.csv",
@@ -25,7 +40,6 @@ fn main() {
         "data/Binance_XLMUSDT_minute.csv",
         "data/Binance_ADAUSDT_minute.csv",
     ];
-    // let mut rsi_trader = RSITrader::new(14).unwrap();
     let mut rsi_trader = RSITrader::default();
     let mut fso_trader = FSOTrader::default();
     let mut sso_trader = SSOTrader::default();
@@ -59,7 +73,10 @@ fn main() {
     }
 }
 
-fn backtest(mut trader: impl Trade + Description, filename: &str) -> Result<((f64, f64)), Box<dyn Error>> {
+fn backtest(
+    mut trader: impl Trade + Description,
+    filename: &str,
+) -> Result<((f64, f64)), Box<dyn Error>> {
     println!(
         "Executing {:?} on dataset {:?}",
         trader.description(),

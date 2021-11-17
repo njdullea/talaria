@@ -24,6 +24,8 @@ fn main() {
         }
     }
 
+    // market::compage_exchange_prices();
+
     // backtest_indicator_traders();
 }
 

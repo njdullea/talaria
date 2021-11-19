@@ -4,6 +4,8 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::time::SystemTime;
 use std::vec;
+use binance::model::KlineEvent;
+use serde::Serialize;
 // use chrono::serde::ts_nanoseconds::deserialize;
 // use serde::Deserialize;
 use serde::{de::Error, Deserialize, Deserializer};
@@ -17,6 +19,9 @@ use chrono::Duration;
 use coinbase_pro_rs::structs::public::Candle;
 use coinbase_pro_rs::structs::DateTime;
 use coinbase_pro_rs::{Public, Sync, MAIN_URL};
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::Path;
 
 pub trait Trade {
     fn trade(&mut self, data_item: DataItem) -> Option<MarketAction>;
@@ -123,7 +128,103 @@ pub fn setup_testing_data() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn compage_exchange_prices() {
+pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
+    local_env::setup_local_env();
+    let binance_api_key = local_env::get_env_var("BINANCE_US_API_KEY");
+    let binance_secret_key = local_env::get_env_var("BINANCE_US_SECRET_KEY");
+    let api_endpoint = "https://api.binance.us";
+    let config = config::Config::default().set_rest_api_endpoint(api_endpoint);
+    let binance_market: Market = Binance::new_with_config(binance_api_key, binance_secret_key, &config);
+    let coinbase_client: Public<Sync> = Public::new(MAIN_URL);
+
+    let system_time = SystemTime::now();
+    let now = DateTime::from(system_time);
+    let mut start = DateTime::from(system_time)
+        .checked_sub_signed(Duration::days(1))
+        .unwrap();
+    let mut end = DateTime::from(system_time)
+        .checked_sub_signed(Duration::days(1))
+        .unwrap()
+        .checked_add_signed(Duration::minutes(300))
+        .unwrap();
+
+    while end.timestamp_nanos() < now.timestamp_nanos() {
+        let mut coinbase_klines = coinbase_client.get_candles(
+            "ADA-USD",
+            Some(start.clone()),
+            Some(end.clone()),
+            coinbase_pro_rs::structs::public::Granularity::M1,
+        )?;
+        
+        let path = Path::new("lorem_ipsum.txt");
+        let display = path.display();
+        
+        // Open a file in write-only mode, returns `io::Result<File>`
+        let mut file = match File::create(&path) {
+            Err(why) => panic!("couldn't create {}: {}", display, why),
+            Ok(file) => file,
+        };
+
+        // TODO: check order struc these are guesses
+        let mut coinbase_records = record::Records {
+            records: vec![],
+        };
+        coinbase_klines.into_iter().for_each(|f| {
+            coinbase_records.records.push(record::Record {
+                date: f.0.to_string(),
+                open: f.1,
+                close: f.4,
+                high: f.2,
+                low: f.3,
+                volume: f.5
+            });
+        });
+
+        let coinbase_st = serde_json::to_string(&coinbase_records).unwrap();
+
+        // let coinbase_records = coinbase_klines.into_iter().for_each(|f: coinbase_pro_rs::Public<Candle>| -> Vec<record::Record> {
+        //     record::Record {
+        //         date: f.0.to_string(),
+        //         open: f.1,
+        //         close: f.4,
+        //         high: f.2,
+        //         low: f.3,
+        //         volume: f.5
+        //     }
+        // });
+
+        // Write the `LOREM_IPSUM` string to `file`, returns `io::Result<()>`
+        match file.write_all(coinbase_st.as_bytes()) {
+            Err(why) => panic!("couldn't write to {}: {}", display, why),
+            Ok(_) => println!("successfully wrote to {}", display),
+        }
+
+        // let _binance_klines = binance_market.get_klines(
+        //     "ADAUSD",
+        //     "1m",
+        //     None,
+        //     start.timestamp_millis() as u64,
+        //     end.timestamp_millis() as u64,
+        // )?;
+
+        start = start
+            .checked_add_signed(Duration::minutes(300))
+            .unwrap();
+        end = end
+            .checked_add_signed(Duration::minutes(300))
+            .unwrap()
+    };
+
+    Ok(())
+}
+
+/*
+    1. Saving exchange data sets to csv.
+    2. Backtesting atalanta on each data set.
+    3. Websocket connection passing updating atalanta.
+*/
+
+pub fn compare_exchange_prices() {
     let system_time = SystemTime::now();
     let now = DateTime::from(system_time);
     // When this is set over like 500 the times are getting out of sync.

@@ -45,12 +45,12 @@ impl Atalanta {
 		if max_exchange.is_some() && min_exchange.is_some() {
 			let max_exchange_info = max_exchange.unwrap();
 			let min_exchange_info = min_exchange.unwrap();
-			return Some((max_exchange_info, min_exchange_info));
+			// Confirm they are not the same exchange.
+			if max_exchange_info.0 != min_exchange_info.0 {
+				return Some((max_exchange_info, min_exchange_info));
+			}
 		}
 
 		None
 	}
 }
-
-
-

@@ -1,6 +1,6 @@
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Record {
     pub date: String,
     pub open: f64,
@@ -8,5 +8,9 @@ pub struct Record {
     pub high: f64,
     pub low: f64,
     pub volume: f64,
-    // adj_close: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Records {
+    pub records: Vec<Record>
 }

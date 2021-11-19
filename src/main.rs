@@ -18,7 +18,14 @@ use crate::traders::slow_stochastic_oscillator::SSOTrader;
 use crate::traits::Description;
 
 fn main() {
-    match market::setup_testing_data() {
+    // match market::setup_testing_data() {
+    //     Ok(_) => {}
+    //     Err(e) => {
+    //         println!("E: {:?}", e);
+    //     }
+    // }
+
+    match market::save_exchange_data() {
         Ok(_) => {}
         Err(e) => {
             println!("E: {:?}", e);

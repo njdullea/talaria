@@ -140,72 +140,95 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
     let system_time = SystemTime::now();
     let now = DateTime::from(system_time);
     let mut start = DateTime::from(system_time)
-        .checked_sub_signed(Duration::days(1))
+        .checked_sub_signed(Duration::hours(6))
         .unwrap();
     let mut end = DateTime::from(system_time)
-        .checked_sub_signed(Duration::days(1))
+        .checked_sub_signed(Duration::hours(6))
         .unwrap()
         .checked_add_signed(Duration::minutes(300))
         .unwrap();
 
     while end.timestamp_nanos() < now.timestamp_nanos() {
-        let mut coinbase_klines = coinbase_client.get_candles(
-            "ADA-USD",
+        let coinbase_klines = coinbase_client.get_candles(
+            "XLM-USD",
             Some(start.clone()),
             Some(end.clone()),
             coinbase_pro_rs::structs::public::Granularity::M1,
         )?;
         
-        let path = Path::new("lorem_ipsum.txt");
-        let display = path.display();
+        let coinbase_path = Path::new("data/XLM-USD-Coinbase.txt");
+        let coinbase_display = coinbase_path.display();
         
         // Open a file in write-only mode, returns `io::Result<File>`
-        let mut file = match File::create(&path) {
-            Err(why) => panic!("couldn't create {}: {}", display, why),
+        let mut coinbase_file = match File::create(&coinbase_path) {
+            Err(why) => panic!("couldn't create {}: {}", coinbase_display, why),
             Ok(file) => file,
         };
 
-        // TODO: check order struc these are guesses
-        let mut coinbase_records = record::Records {
-            records: vec![],
-        };
+        let mut coinbase_records: Vec<record::Record> = vec![];
         coinbase_klines.into_iter().for_each(|f| {
-            coinbase_records.records.push(record::Record {
+            coinbase_records.insert(0, record::Record {
                 date: f.0.to_string(),
-                open: f.1,
+                open: f.3,
                 close: f.4,
                 high: f.2,
-                low: f.3,
+                low: f.1,
                 volume: f.5
             });
         });
 
         let coinbase_st = serde_json::to_string(&coinbase_records).unwrap();
 
-        // let coinbase_records = coinbase_klines.into_iter().for_each(|f: coinbase_pro_rs::Public<Candle>| -> Vec<record::Record> {
-        //     record::Record {
-        //         date: f.0.to_string(),
-        //         open: f.1,
-        //         close: f.4,
-        //         high: f.2,
-        //         low: f.3,
-        //         volume: f.5
-        //     }
-        // });
-
-        // Write the `LOREM_IPSUM` string to `file`, returns `io::Result<()>`
-        match file.write_all(coinbase_st.as_bytes()) {
-            Err(why) => panic!("couldn't write to {}: {}", display, why),
-            Ok(_) => println!("successfully wrote to {}", display),
+        // Write the string to `file`, returns `io::Result<()>`
+        match coinbase_file.write_all(coinbase_st.as_bytes()) {
+            Err(why) => panic!("couldn't write to {}: {}", coinbase_display, why),
+            Ok(_) => println!("successfully wrote to {}", coinbase_display),
         }
 
-        // let _binance_klines = binance_market.get_klines(
-        //     "ADAUSD",
-        //     "1m",
-        //     None,
-        //     start.timestamp_millis() as u64,
-        //     end.timestamp_millis() as u64,
-        // )?;
+        // let mut binance_records: Vec<record::Record> = vec![];
+        let binance_klines = binance_market.get_klines(
+            "ADAUSD",
+            "1m",
+            None,
+            start.timestamp_millis() as u64,
+            end.timestamp_millis() as u64,
+        )?;
+
+        let binance_path = Path::new("data/XLM-USD-Binance.txt");
+        let binance_display = binance_path.display();
+        
+        // Open a file in write-only mode, returns `io::Result<File>`
+        let mut binance_file = match File::create(&binance_path) {
+            Err(why) => panic!("couldn't create {}: {}", binance_display, why),
+            Ok(file) => file,
+        };
+
+        let mut binance_records: Vec<record::Record> = vec![];
+        match binance_klines {
+            binance::model::KlineSummaries::AllKlineSummaries(klines) => {
+                for kline in klines {
+                    let record = record::Record {
+                        // Convert milliseconds into seconds.
+                        date: (kline.open_time / 1000).to_string(),
+                        open: kline.open,
+                        high: kline.high,
+                        low: kline.low,
+                        close: kline.close,
+                        volume: kline.volume,
+                    };
+    
+                    binance_records.push(record);
+                }
+            }
+        }
+
+        let binance_st = serde_json::to_string(&binance_records).unwrap();
+
+        // Write the string to `file`, returns `io::Result<()>`
+        match binance_file.write_all(binance_st.as_bytes()) {
+            Err(why) => panic!("couldn't write to {}: {}", binance_display, why),
+            Ok(_) => println!("successfully wrote to {}", binance_display),
+        }
 
         start = start
             .checked_add_signed(Duration::minutes(300))

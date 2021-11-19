@@ -1,3 +1,4 @@
+mod atalanta;
 mod local_env;
 mod market;
 mod record;

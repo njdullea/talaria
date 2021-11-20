@@ -148,6 +148,10 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
         .checked_add_signed(Duration::minutes(300))
         .unwrap();
 
+    // create_file(&"data/XLM-USD-Binance.txt");
+    let mut coinbase_records: Vec<record::Record> = vec![];
+    let mut binance_records: Vec<record::Record> = vec![];
+
     while end.timestamp_nanos() < now.timestamp_nanos() {
         let coinbase_klines = coinbase_client.get_candles(
             "XLM-USD",
@@ -155,17 +159,7 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
             Some(end.clone()),
             coinbase_pro_rs::structs::public::Granularity::M1,
         )?;
-        
-        let coinbase_path = Path::new("data/XLM-USD-Coinbase.txt");
-        let coinbase_display = coinbase_path.display();
-        
-        // Open a file in write-only mode, returns `io::Result<File>`
-        let mut coinbase_file = match File::create(&coinbase_path) {
-            Err(why) => panic!("couldn't create {}: {}", coinbase_display, why),
-            Ok(file) => file,
-        };
 
-        let mut coinbase_records: Vec<record::Record> = vec![];
         coinbase_klines.into_iter().for_each(|f| {
             coinbase_records.insert(0, record::Record {
                 date: f.0.to_string(),
@@ -177,33 +171,14 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
             });
         });
 
-        let coinbase_st = serde_json::to_string(&coinbase_records).unwrap();
-
-        // Write the string to `file`, returns `io::Result<()>`
-        match coinbase_file.write_all(coinbase_st.as_bytes()) {
-            Err(why) => panic!("couldn't write to {}: {}", coinbase_display, why),
-            Ok(_) => println!("successfully wrote to {}", coinbase_display),
-        }
-
-        // let mut binance_records: Vec<record::Record> = vec![];
         let binance_klines = binance_market.get_klines(
-            "ADAUSD",
+            "XLMUSD",
             "1m",
             None,
             start.timestamp_millis() as u64,
             end.timestamp_millis() as u64,
         )?;
-
-        let binance_path = Path::new("data/XLM-USD-Binance.txt");
-        let binance_display = binance_path.display();
         
-        // Open a file in write-only mode, returns `io::Result<File>`
-        let mut binance_file = match File::create(&binance_path) {
-            Err(why) => panic!("couldn't create {}: {}", binance_display, why),
-            Ok(file) => file,
-        };
-
-        let mut binance_records: Vec<record::Record> = vec![];
         match binance_klines {
             binance::model::KlineSummaries::AllKlineSummaries(klines) => {
                 for kline in klines {
@@ -222,14 +197,6 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        let binance_st = serde_json::to_string(&binance_records).unwrap();
-
-        // Write the string to `file`, returns `io::Result<()>`
-        match binance_file.write_all(binance_st.as_bytes()) {
-            Err(why) => panic!("couldn't write to {}: {}", binance_display, why),
-            Ok(_) => println!("successfully wrote to {}", binance_display),
-        }
-
         start = start
             .checked_add_signed(Duration::minutes(300))
             .unwrap();
@@ -238,7 +205,31 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap()
     };
 
+    let coinbase_content = serde_json::to_string(&coinbase_records).unwrap();
+    create_file_with_data("data/XLM-USD-Coinbase.txt", coinbase_content);
+
+    let binance_content = serde_json::to_string(&binance_records).unwrap();
+    create_file_with_data(&"data/XLM-USD-Binance.txt", binance_content);
+
     Ok(())
+}
+
+// Will overwrite an existing file.
+fn create_file_with_data(file_path: &str, content: String) {
+    let path = Path::new(file_path);
+    let display = path.display();
+
+    // Open a file in write-only mode, returns `io::Result<File>`
+    let mut file = match File::create(file_path) {
+        Err(why) => panic!("Couldn't open {}: {}", display, why),
+        Ok(file) => file,
+    };
+
+    // Write the string to `file`, returns `io::Result<()>`
+    match file.write_all(content.as_bytes()) {
+        Err(why) => panic!("couldn't write to {}: {}", display, why),
+        Ok(_) => println!("successfully wrote to {}", display),
+    }
 }
 
 /*

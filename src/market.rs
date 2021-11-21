@@ -1,11 +1,11 @@
 use crate::local_env;
 use crate::record;
 use std::borrow::Borrow;
-use std::collections::HashMap;
+// use std::collections::HashMap;
 use std::time::SystemTime;
 use std::vec;
-use binance::model::KlineEvent;
-use serde::Serialize;
+// use binance::model::KlineEvent;
+// use serde::Serialize;
 // use chrono::serde::ts_nanoseconds::deserialize;
 // use serde::Deserialize;
 use serde::{de::Error, Deserialize, Deserializer};
@@ -19,9 +19,9 @@ use chrono::Duration;
 use coinbase_pro_rs::structs::public::Candle;
 use coinbase_pro_rs::structs::DateTime;
 use coinbase_pro_rs::{Public, Sync, MAIN_URL};
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
+// use std::fs::File;
+// use std::io::prelude::*;
+// use std::path::Path;
 
 pub trait Trade {
     fn trade(&mut self, data_item: DataItem) -> Option<MarketAction>;
@@ -140,18 +140,24 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
     let system_time = SystemTime::now();
     let now = DateTime::from(system_time);
     let mut start = DateTime::from(system_time)
-        .checked_sub_signed(Duration::hours(6))
+        .checked_sub_signed(Duration::weeks(3))
         .unwrap();
     let mut end = DateTime::from(system_time)
-        .checked_sub_signed(Duration::hours(6))
+        .checked_sub_signed(Duration::weeks(3))
         .unwrap()
         .checked_add_signed(Duration::minutes(300))
         .unwrap();
 
-    // create_file(&"data/XLM-USD-Binance.txt");
+    // Kraken does not have any limits on how much OHLC data in one request.
+    // Additionally, Kraken records go right up 
+    let kraken_records = get_kraken_data(start).unwrap();
+    record::save_records_to_file("data/XLM-USD-Kraken.txt", kraken_records);
+
+    // Coinbase and Binance do have limits on how much OHLC data in one request.
     let mut coinbase_records: Vec<record::Record> = vec![];
     let mut binance_records: Vec<record::Record> = vec![];
 
+    // TODO: this goes close to now, not right up to now leaving a little bit of data behind.
     while end.timestamp_nanos() < now.timestamp_nanos() {
         let coinbase_klines = coinbase_client.get_candles(
             "XLM-USD",
@@ -160,6 +166,7 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
             coinbase_pro_rs::structs::public::Granularity::M1,
         )?;
 
+        // TODO: there is something wack going on with the order of coinbase data!
         coinbase_klines.into_iter().for_each(|f| {
             coinbase_records.insert(0, record::Record {
                 date: f.0.to_string(),
@@ -205,31 +212,10 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap()
     };
 
-    let coinbase_content = serde_json::to_string(&coinbase_records).unwrap();
-    create_file_with_data("data/XLM-USD-Coinbase.txt", coinbase_content);
-
-    let binance_content = serde_json::to_string(&binance_records).unwrap();
-    create_file_with_data(&"data/XLM-USD-Binance.txt", binance_content);
+    record::save_records_to_file("data/XLM-USD-Coinbase.txt", coinbase_records);
+    record::save_records_to_file("data/XLM-USD-Binance.txt", binance_records);
 
     Ok(())
-}
-
-// Will overwrite an existing file.
-fn create_file_with_data(file_path: &str, content: String) {
-    let path = Path::new(file_path);
-    let display = path.display();
-
-    // Open a file in write-only mode, returns `io::Result<File>`
-    let mut file = match File::create(file_path) {
-        Err(why) => panic!("Couldn't open {}: {}", display, why),
-        Ok(file) => file,
-    };
-
-    // Write the string to `file`, returns `io::Result<()>`
-    match file.write_all(content.as_bytes()) {
-        Err(why) => panic!("couldn't write to {}: {}", display, why),
-        Ok(_) => println!("successfully wrote to {}", display),
-    }
 }
 
 /*

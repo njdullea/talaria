@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::record;
 
-struct Atalanta {
+struct Talaria {
 	exchange_fees: HashMap<String, f64>,
 	exchange_prices: HashMap<String, f64>,
 }
@@ -10,7 +10,7 @@ struct Atalanta {
 // Max exchange and value, then min exchange and value.
 type ExchangePair = ((String, f64), (String, f64));
 
-impl Atalanta {
+impl Talaria {
 	pub fn new() -> Self {
 		// Why won't Hashmap::from work?
 		let mut exchange_fees: HashMap<String, f64> = HashMap::new();
@@ -94,8 +94,8 @@ mod tests {
 	use super::*;
 
     #[test]
-    fn simple_test_atalanta() {
-		let mut ata = Atalanta::new();
+    fn simple_test_talaria() {
+		let mut ata = Talaria::new();
 		ata.update_exchange_price("exchange1".to_owned(), 1.0);
 		ata.update_exchange_price("exchange2".to_owned(), 1.1);
 		ata.update_exchange_price("exchange3".to_owned(), 1.2);
@@ -107,17 +107,17 @@ mod tests {
     }
 
 	#[test]
-	fn backtest_atalanta() {
+	fn backtest_talaria() {
 		let coinbase_records = record::read_records_from_file("data/XLM-USD-Coinbase.txt");
 		let binance_records = record::read_records_from_file("data/XLM-USD-Binance.txt");
 
-		let mut coinbase_funds = 500_f64;
-		let coinbase_coins = 1000_f64;
-		let mut binance_funds = 500_f64;
-		let binance_coins = 1000_f64;
+		let mut coinbase_funds = 5000_f64;
+		let coinbase_coins = 10000_f64;
+		let mut binance_funds = 5000_f64;
+		let binance_coins = 10000_f64;
 		
-		let mut trade_qty = 1000_f64;
-		let mut ata = Atalanta::new();
+		let mut trade_qty = 10000_f64;
+		let mut ata = Talaria::new();
 
 		for (coinbase_record, binance_record) in coinbase_records.iter().zip(binance_records.iter()) {
 			assert_eq!(coinbase_record.date, binance_record.date);

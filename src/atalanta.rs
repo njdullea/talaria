@@ -74,13 +74,10 @@ impl Atalanta {
 		match self.find_best_trade_pair() {
 			Some((max_exchange, min_exchange)) => {
 				let price_diff = max_exchange.1 - min_exchange.1;
-				// println!("Cost of max and min exchange: {:?} {:?}", max_exchange.1, min_exchange.1);
-				// println!("Price diff 1 unit: {:?}", price_diff);
 				let max_exchange_fee = self.exchange_fees.get(&max_exchange.0).unwrap();
 				let min_exchange_fee = self.exchange_fees.get(&min_exchange.0).unwrap();
 
 				let fee_1unit = (max_exchange.1 * max_exchange_fee) + (min_exchange.1 * min_exchange_fee);
-				// println!("Fee 1 unit: {:?}", fee_1unit);
 				if price_diff > fee_1unit {
 					return Some(((max_exchange, min_exchange), price_diff));
 				}
@@ -94,9 +91,7 @@ impl Atalanta {
 
 #[cfg(test)]
 mod tests {
-	use serde_json::to_string;
-
-use super::*;
+	use super::*;
 
     #[test]
     fn simple_test_atalanta() {
@@ -117,15 +112,14 @@ use super::*;
 		let binance_records = record::read_records_from_file("data/XLM-USD-Binance.txt");
 
 		let mut coinbase_funds = 500_f64;
-		let coinbase_coins = 500_f64;
+		let coinbase_coins = 1000_f64;
 		let mut binance_funds = 500_f64;
-		let binance_coins = 500_f64;
+		let binance_coins = 1000_f64;
 		
-		let trade_qty = 250_f64;
+		let mut trade_qty = 1000_f64;
 		let mut ata = Atalanta::new();
 
 		for (coinbase_record, binance_record) in coinbase_records.iter().zip(binance_records.iter()) {
-			// println!("Record one and two: {:?} {:?}", coinbase_record.date, binance_record.date);
 			assert_eq!(coinbase_record.date, binance_record.date);
 
 			ata.update_exchange_price("coinbase".to_owned(), coinbase_record.close);
@@ -133,11 +127,13 @@ use super::*;
 
 			match ata.check_for_trade_and_value() {
 				Some(((max_exchange, min_exchange), price_diff)) => {
-					println!("Price diff: {:?}", price_diff);
+					// println!("Price diff: {:?}", price_diff);
 					let max_exchange_fee = ata.exchange_fees.get(&max_exchange.0).unwrap().to_owned();
 					let min_exchange_fee = ata.exchange_fees.get(&min_exchange.0).unwrap().to_owned();
 
-					if max_exchange.0 == "coinbase".to_owned() {
+					if max_exchange.0 == "coinbase".to_owned() { 
+						trade_qty = f64::min((binance_funds * 0.8) / min_exchange.1, coinbase_coins);
+						
 						let coinbase_cost = max_exchange.1 * trade_qty;
 						let coinbase_fee = coinbase_cost * max_exchange_fee;
 						let coinbase_total = coinbase_cost + coinbase_fee;
@@ -146,7 +142,7 @@ use super::*;
 						let binance_fee = binance_cost * min_exchange_fee;
 						let binance_total = binance_cost + binance_fee;
 
-						if (coinbase_coins > trade_qty) && (binance_funds > binance_total) {
+						if (coinbase_coins >= trade_qty) && (binance_funds > binance_total) && (trade_qty > 1_f64) {
 							// sell on coinbase
 							coinbase_funds = coinbase_funds + coinbase_total;
 
@@ -157,6 +153,7 @@ use super::*;
 							println!("CB, BN, and Total: {:?}, {:?}, {:?}", coinbase_funds, binance_funds, coinbase_funds + binance_funds);
 						}
 					} else if max_exchange.0 == "binance".to_owned() {
+						trade_qty = f64::min((coinbase_funds * 0.8) / min_exchange.1, binance_coins);
 						let binance_cost = max_exchange.1 * trade_qty;
 						let binance_fee = binance_cost * max_exchange_fee;
 						let binance_total = binance_cost + binance_fee;
@@ -165,7 +162,7 @@ use super::*;
 						let coinbase_fee = coinbase_cost * min_exchange_fee;
 						let coinbase_total = coinbase_cost + coinbase_fee;
 
-						if (binance_coins > trade_qty) && (coinbase_funds > coinbase_total) {
+						if (binance_coins >= trade_qty) && (coinbase_funds > coinbase_total) && (trade_qty > 1_f64) {
 							// buy on coinbase
 							coinbase_funds = coinbase_funds - coinbase_total;
 

@@ -28,7 +28,7 @@ fn main() {
     match market::save_exchange_data() {
         Ok(_) => {}
         Err(e) => {
-            println!("E: {:?}", e);
+            println!("Error saving exchange data: {:?}", e);
         }
     }
 

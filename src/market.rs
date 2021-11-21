@@ -3,7 +3,6 @@ use crate::record;
 use std::time::SystemTime;
 use std::vec;
 use serde::{de::Error, Deserialize, Deserializer};
-use ta::DataItem;
 use reqwest;
 use binance::api::*;
 use binance::config;
@@ -12,15 +11,6 @@ use chrono::Duration;
 use coinbase_pro_rs::structs::DateTime;
 use coinbase_pro_rs::{Public, Sync, MAIN_URL};
 
-pub trait Trade {
-    fn trade(&mut self, data_item: DataItem) -> Option<MarketAction>;
-}
-
-#[derive(Debug)]
-pub enum MarketAction {
-    Buy,
-    Sell,
-}
 // time, open, high, low, close, vwap, volume, count
 #[derive(Deserialize, Debug)]
 struct KrakenKLine (

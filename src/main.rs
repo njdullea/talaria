@@ -1,11 +1,11 @@
 mod talaria;
 mod local_env;
-mod market;
+mod exchange;
 mod record;
 mod traits;
 
 fn main() {
-    match market::save_exchange_data() {
+    match exchange::save_exchange_data() {
         Ok(_) => {}
         Err(e) => {
             println!("Error saving exchange data: {:?}", e);

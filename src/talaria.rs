@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::record;
 
-struct Talaria {
+pub struct Talaria {
 	exchange_fees: HashMap<String, f64>,
 	exchange_prices: HashMap<String, f64>,
 }
@@ -87,49 +87,30 @@ impl Talaria {
 			None => return None,
 		}
 	}
-}
 
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-    #[test]
-    fn simple_test_talaria() {
-		let mut ata = Talaria::new();
-		ata.update_exchange_price("exchange1".to_owned(), 1.0);
-		ata.update_exchange_price("exchange2".to_owned(), 1.1);
-		ata.update_exchange_price("exchange3".to_owned(), 1.2);
-		ata.update_exchange_price("exchange1".to_owned(), 1.3);
-
-		let (max_exchange, min_exchange) = ata.find_best_trade_pair().unwrap();
-		assert_eq!(max_exchange, ("exchange1".to_owned(), 1.3));
-		assert_eq!(min_exchange, ("exchange2".to_owned(), 1.1));
-    }
-
-	#[test]
-	fn backtest_talaria() {
+	pub fn backtest(&mut self) {
 		let coinbase_records = record::read_records_from_file("data/XLM-USD-Coinbase.txt");
 		let binance_records = record::read_records_from_file("data/XLM-USD-Binance.txt");
 
-		let mut coinbase_funds = 5000_f64;
-		let coinbase_coins = 10000_f64;
-		let mut binance_funds = 5000_f64;
-		let binance_coins = 10000_f64;
+		let mut coinbase_funds = 50000000_f64;
+		let coinbase_coins = 100000000_f64;
+		let mut binance_funds = 50000000_f64;
+		let binance_coins = 100000000_f64;
 		
-		let mut trade_qty = 10000_f64;
-		let mut ata = Talaria::new();
+		let mut trade_qty: f64;
+		let mut tlr = Talaria::new();
 
 		for (coinbase_record, binance_record) in coinbase_records.iter().zip(binance_records.iter()) {
 			assert_eq!(coinbase_record.date, binance_record.date);
 
-			ata.update_exchange_price("coinbase".to_owned(), coinbase_record.close);
-			ata.update_exchange_price("binance".to_owned(), binance_record.close);
+			 tlr.update_exchange_price("coinbase".to_owned(), coinbase_record.close);
+			 tlr.update_exchange_price("binance".to_owned(), binance_record.close);
 
-			match ata.check_for_trade_and_value() {
-				Some(((max_exchange, min_exchange), price_diff)) => {
+			match tlr.check_for_trade_and_value() {
+				Some(((max_exchange, min_exchange), _price_diff)) => {
 					// println!("Price diff: {:?}", price_diff);
-					let max_exchange_fee = ata.exchange_fees.get(&max_exchange.0).unwrap().to_owned();
-					let min_exchange_fee = ata.exchange_fees.get(&min_exchange.0).unwrap().to_owned();
+					let max_exchange_fee = tlr.exchange_fees.get(&max_exchange.0).unwrap().to_owned();
+					let min_exchange_fee = tlr.exchange_fees.get(&min_exchange.0).unwrap().to_owned();
 
 					if max_exchange.0 == "coinbase".to_owned() { 
 						trade_qty = f64::min((binance_funds * 0.8) / min_exchange.1, coinbase_coins);
@@ -177,6 +158,99 @@ mod tests {
 				None => {},
 			}
 		}
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+    #[test]
+    fn simple_test_talaria() {
+		let mut tlr = Talaria::new();
+		 tlr.update_exchange_price("exchange1".to_owned(), 1.0);
+		 tlr.update_exchange_price("exchange2".to_owned(), 1.1);
+		 tlr.update_exchange_price("exchange3".to_owned(), 1.2);
+		 tlr.update_exchange_price("exchange1".to_owned(), 1.3);
+
+		let (max_exchange, min_exchange) = tlr.find_best_trade_pair().unwrap();
+		assert_eq!(max_exchange, ("exchange1".to_owned(), 1.3));
+		assert_eq!(min_exchange, ("exchange2".to_owned(), 1.1));
+    }
+
+	#[test]
+	fn backtest_talaria() {
+		let mut tlr = Talaria::new();
+		tlr.backtest();
+		// let coinbase_records = record::read_records_from_file("data/XLM-USD-Coinbase.txt");
+		// let binance_records = record::read_records_from_file("data/XLM-USD-Binance.txt");
+
+		// let mut coinbase_funds = 5000_f64;
+		// let coinbase_coins = 10000_f64;
+		// let mut binance_funds = 5000_f64;
+		// let binance_coins = 10000_f64;
+		
+		// let mut trade_qty = 10000_f64;
+		// let mut tlr = Talaria::new();
+
+		// for (coinbase_record, binance_record) in coinbase_records.iter().zip(binance_records.iter()) {
+		// 	assert_eq!(coinbase_record.date, binance_record.date);
+
+		// 	 tlr.update_exchange_price("coinbase".to_owned(), coinbase_record.close);
+		// 	 tlr.update_exchange_price("binance".to_owned(), binance_record.close);
+
+		// 	match tlr.check_for_trade_and_value() {
+		// 		Some(((max_exchange, min_exchange), price_diff)) => {
+		// 			// println!("Price diff: {:?}", price_diff);
+		// 			let max_exchange_fee = tlr.exchange_fees.get(&max_exchange.0).unwrap().to_owned();
+		// 			let min_exchange_fee = tlr.exchange_fees.get(&min_exchange.0).unwrap().to_owned();
+
+		// 			if max_exchange.0 == "coinbase".to_owned() { 
+		// 				trade_qty = f64::min((binance_funds * 0.8) / min_exchange.1, coinbase_coins);
+						
+		// 				let coinbase_cost = max_exchange.1 * trade_qty;
+		// 				let coinbase_fee = coinbase_cost * max_exchange_fee;
+		// 				let coinbase_total = coinbase_cost + coinbase_fee;
+
+		// 				let binance_cost = min_exchange.1 * trade_qty;
+		// 				let binance_fee = binance_cost * min_exchange_fee;
+		// 				let binance_total = binance_cost + binance_fee;
+
+		// 				if (coinbase_coins >= trade_qty) && (binance_funds > binance_total) && (trade_qty > 1_f64) {
+		// 					// sell on coinbase
+		// 					coinbase_funds = coinbase_funds + coinbase_total;
+
+		// 					// sell on binance
+		// 					binance_funds = binance_funds - binance_total;
+
+		// 					// pretend we send coins from one wallet to the other to balance out.
+		// 					println!("CB, BN, and Total: {:?}, {:?}, {:?}", coinbase_funds, binance_funds, coinbase_funds + binance_funds);
+		// 				}
+		// 			} else if max_exchange.0 == "binance".to_owned() {
+		// 				trade_qty = f64::min((coinbase_funds * 0.8) / min_exchange.1, binance_coins);
+		// 				let binance_cost = max_exchange.1 * trade_qty;
+		// 				let binance_fee = binance_cost * max_exchange_fee;
+		// 				let binance_total = binance_cost + binance_fee;
+
+		// 				let coinbase_cost = min_exchange.1 * trade_qty;
+		// 				let coinbase_fee = coinbase_cost * min_exchange_fee;
+		// 				let coinbase_total = coinbase_cost + coinbase_fee;
+
+		// 				if (binance_coins >= trade_qty) && (coinbase_funds > coinbase_total) && (trade_qty > 1_f64) {
+		// 					// buy on coinbase
+		// 					coinbase_funds = coinbase_funds - coinbase_total;
+
+		// 					// sell on binance
+		// 					binance_funds = binance_funds + binance_total;
+
+		// 					// pretend we send coins from one wallet to the other to balance coin totals.
+		// 					println!("BN, CB, and Total: {:?}, {:?}, {:?}", binance_funds, coinbase_funds, coinbase_funds + binance_funds);
+		// 				}
+		// 			}
+		// 		},
+		// 		None => {},
+		// 	}
+		// }
 
 	}
 }

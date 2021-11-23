@@ -30,12 +30,6 @@ struct KrakenKLine (
     u64
 );
 
-impl KrakenKLine {
-    fn new(time: u64, open: f64, high: f64, low: f64, close: f64, vwap: f64, volume: f64, count: u64) -> Self {
-        KrakenKLine (time, open, high, low, close, vwap, volume, count)
-    }
-}
-
 fn f64_from_string<'de, D>(deserializer: D) -> Result<f64, D::Error>
 where
     D: Deserializer<'de>,
@@ -44,9 +38,11 @@ where
     s.parse::<f64>().map_err(D::Error::custom)
 }
 
+// #[serde(deny_unknown_fields)]
 #[derive(Deserialize, Debug)]
 struct KrakenResultStruct {
-    XXLMZUSD: Vec<KrakenKLine>,
+    #[serde(rename = "XXLMZUSD")]
+    xxlmzusd: Vec<KrakenKLine>,
     last: u64,
 }
 
@@ -154,7 +150,7 @@ fn get_kraken_data(start: DateTime) -> Result<Vec<record::Record>, Box<dyn std::
 
     let mut records: Vec<record::Record> = vec![];
 
-    for kline in json.result.XXLMZUSD.iter() {
+    for kline in json.result.xxlmzusd.iter() {
         let record = record::Record {
             date: kline.0.to_string(),
             open: kline.1,

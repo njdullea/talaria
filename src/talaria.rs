@@ -92,15 +92,23 @@ impl Talaria {
 		let coinbase_records = record::read_records_from_file("data/XLM-USD-Coinbase.txt");
 		let binance_records = record::read_records_from_file("data/XLM-USD-Binance.txt");
 
-		let mut coinbase_funds = 50000000_f64;
-		let coinbase_coins = 100000000_f64;
-		let mut binance_funds = 50000000_f64;
-		let binance_coins = 100000000_f64;
+		let mut coinbase_funds = 500_f64;
+		let coinbase_coins = 1000_f64;
+		let mut binance_funds = 500_f64;
+		let binance_coins = 1000_f64;
 		
 		let mut trade_qty: f64;
 		let mut tlr = Talaria::new();
 
+		let mut line_num = 0;
+
+		// Make BTreeMap (sorted hashamp) and go through each data set to sort by datetime. Use struct with each exchange and Option? 
+
 		for (coinbase_record, binance_record) in coinbase_records.iter().zip(binance_records.iter()) {
+			if coinbase_record.date != binance_record.date {
+				println!("Not same time {:?}, {:?}, {:?}", line_num, coinbase_record.date, binance_record.date)
+			}
+			line_num = line_num + 1;
 			assert_eq!(coinbase_record.date, binance_record.date);
 
 			 tlr.update_exchange_price("coinbase".to_owned(), coinbase_record.close);

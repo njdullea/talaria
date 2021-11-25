@@ -7,6 +7,9 @@ use reqwest;
 use binance::api::*;
 use binance::config;
 use binance::market::*;
+use binance::websockets::*;
+use std::sync::atomic::AtomicBool;
+use std::sync::mpsc;
 use chrono::Duration;
 use coinbase_pro_rs::structs::DateTime;
 use coinbase_pro_rs::{Public, Sync, MAIN_URL};
@@ -164,3 +167,41 @@ fn get_kraken_data(start: DateTime) -> Result<Vec<record::Record>, Box<dyn std::
 
     Ok(records)
 }
+
+pub fn subscribe_to_binance_klines(tx: mpsc::Sender<record::Record>) {
+    let keep_running = AtomicBool::new(true); // Used to control the event loop
+    let kline: String = format!("{}", "bnbbtc@kline_1m");
+
+    let mut web_socket: WebSockets = WebSockets::new(|event: WebsocketEvent| {
+        match event {
+            WebsocketEvent::Kline(kline_event) => {
+                let is_final_bar = kline_event.kline.is_final_bar.clone();
+                if is_final_bar {
+                    let dp = record::Record {
+                        date: (kline_event.event_time / 1000_u64).to_string(),
+                        high: kline_event.kline.high.parse::<f64>().unwrap(),
+                        low: kline_event.kline.low.parse::<f64>().unwrap(),
+                        open: kline_event.kline.open.parse::<f64>().unwrap(),
+                        close: kline_event.kline.close.parse::<f64>().unwrap(),
+                        volume: kline_event.kline.volume.parse::<f64>().unwrap(),
+                    };
+                    tx.send(dp).unwrap();
+                }
+            }
+            _ => (),
+        };
+        Ok(())
+    });
+
+    web_socket.connect(&kline).unwrap(); // check error
+    if let Err(e) = web_socket.event_loop(&keep_running) {
+        match e {
+            err => {
+                println!("Error: {:?}", err);
+            }
+        }
+    }
+    web_socket.disconnect().unwrap();
+}
+
+pub fn subscribe_to_kraken_klines(tx: mpsc::Sender<record::Record>) {}

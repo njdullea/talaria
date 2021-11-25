@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::record;
 
@@ -14,7 +15,7 @@ impl Talaria {
 	pub fn new() -> Self {
 		// Why won't Hashmap::from work?
 		let mut exchange_fees: HashMap<String, f64> = HashMap::new();
-		exchange_fees.insert("coinbase".to_owned(), 0.5 / 100_f64);
+		exchange_fees.insert("coinbase".to_owned(), 0.26 / 100_f64);
 		exchange_fees.insert("binance".to_owned(), 0.1 / 100_f64);
 		exchange_fees.insert("kraken".to_owned(), 0.26 / 100_f64);
 
@@ -87,6 +88,8 @@ impl Talaria {
 			None => return None,
 		}
 	}
+
+	pub fn backtest_v2(&mut self) {}
 
 	pub fn backtest(&mut self) {
 		let coinbase_records = record::read_records_from_file("data/XLM-USD-Coinbase.txt");

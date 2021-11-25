@@ -139,7 +139,7 @@ impl Talaria {
 							binance_funds = binance_funds - binance_total;
 
 							// pretend we send coins from one wallet to the other to balance out.
-							println!("CB, BN, and Total: {:?}, {:?}, {:?}", coinbase_funds, binance_funds, coinbase_funds + binance_funds);
+							println!("DT {:?}, Sell CB {:?}, buy on BN {:?}, and Total: {:?}", coinbase_record.date, coinbase_funds, binance_funds, coinbase_funds + binance_funds);
 						}
 					} else if max_exchange.0 == "binance".to_owned() {
 						trade_qty = f64::min((coinbase_funds * 0.8) / min_exchange.1, binance_coins);
@@ -159,7 +159,7 @@ impl Talaria {
 							binance_funds = binance_funds + binance_total;
 
 							// pretend we send coins from one wallet to the other to balance coin totals.
-							println!("BN, CB, and Total: {:?}, {:?}, {:?}", binance_funds, coinbase_funds, coinbase_funds + binance_funds);
+							println!("DT {:?}, Sell on BN {:?}, buy on CB {:?}, and Total: {:?}", coinbase_record.date, binance_funds, coinbase_funds, coinbase_funds + binance_funds);
 						}
 					}
 				},

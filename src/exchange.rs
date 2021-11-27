@@ -44,8 +44,8 @@ where
 // #[serde(deny_unknown_fields)]
 #[derive(Deserialize, Debug)]
 struct KrakenResultStruct {
-    #[serde(rename = "XXLMZUSD")]
-    xxlmzusd: Vec<KrakenKLine>,
+    #[serde(rename = "XATOMZUSD")]
+    xatomzusd: Vec<KrakenKLine>,
     last: u64,
 }
 
@@ -77,7 +77,7 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
     // Kraken does not have any limits on how much OHLC data in one request.
     // Additionally, Kraken records go right up 
     let kraken_records = get_kraken_data(start).unwrap();
-    record::save_records_to_file("data/XLM-USD-Kraken.txt", kraken_records);
+    record::save_records_to_file("data/ATOM-USD-Kraken.txt", kraken_records);
 
     // Coinbase and Binance do have limits on how much OHLC data in one request.
     let mut coinbase_records: Vec<record::Record> = vec![];
@@ -86,7 +86,7 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
     // TODO: this goes close to now, not right up to now leaving a little bit of data behind.
     while end.timestamp_nanos() < now.timestamp_nanos() {
         let coinbase_klines = coinbase_client.get_candles(
-            "XLM-USD",
+            "ATOM-USD",
             Some(start.clone()),
             Some(end.clone()),
             coinbase_pro_rs::structs::public::Granularity::M1,
@@ -105,7 +105,7 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
         });
 
         let binance_klines = binance_market.get_klines(
-            "XLMUSD",
+            "ATOMUSD",
             "1m",
             None,
             start.timestamp_millis() as u64,
@@ -138,8 +138,8 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap()
     };
 
-    record::save_records_to_file("data/XLM-USD-Coinbase.txt", coinbase_records);
-    record::save_records_to_file("data/XLM-USD-Binance.txt", binance_records);
+    record::save_records_to_file("data/ATOM-USD-Coinbase.txt", coinbase_records);
+    record::save_records_to_file("data/ATOM-USD-Binance.txt", binance_records);
 
     Ok(())
 }
@@ -147,13 +147,13 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
 fn get_kraken_data(start: DateTime) -> Result<Vec<record::Record>, Box<dyn std::error::Error>> {
     let seconds = start.timestamp().to_string();
 
-    let mut url = String::from("https://api.kraken.com/0/public/OHLC?pair=XLMUSD&since=");
+    let mut url = String::from("https://api.kraken.com/0/public/OHLC?pair=ATOMUSD&since=");
     url.push_str(seconds.as_str());
     let json: KrakenResponse = reqwest::blocking::get(url)?.json()?;
 
     let mut records: Vec<record::Record> = vec![];
 
-    for kline in json.result.xxlmzusd.iter() {
+    for kline in json.result.xatomzusd.iter() {
         let record = record::Record {
             date: kline.0.to_string(),
             open: kline.1,
@@ -204,4 +204,4 @@ pub fn subscribe_to_binance_klines(tx: mpsc::Sender<record::Record>) {
     web_socket.disconnect().unwrap();
 }
 
-pub fn subscribe_to_kraken_klines(tx: mpsc::Sender<record::Record>) {}
+// pub fn subscribe_to_kraken_klines(tx: mpsc::Sender<record::Record>) {}

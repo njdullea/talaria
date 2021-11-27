@@ -3,6 +3,7 @@ mod local_env;
 mod exchange;
 mod record;
 mod traits;
+mod exchanges;
 
 use std::env;
 

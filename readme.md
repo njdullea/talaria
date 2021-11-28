@@ -18,6 +18,9 @@
 - Setup saving data and trade actions to files. 
 - Run with recording what actions would have occured and how it would have affected balance.
 - Run for real
+
+# CURRENT NEXT STEPS
+- SETUP WEBSOCKET TO KUCOIN AND RUN TALARIA SAVING WHAT ACTIONS WE WOULD PERFORM TO FILE!
  
 ## Notes
 - Kraken OHLC data doesn't seem to let requests go before a certain prior date.

@@ -19,7 +19,7 @@ where
     s.parse::<u64>().map_err(D::Error::custom)
 }
 
-fn _f64_from_string<'de, D>(deserializer: D) -> Result<f64, D::Error>
+pub fn f64_from_string<'de, D>(deserializer: D) -> Result<f64, D::Error>
 where
     D: Deserializer<'de>,
 {

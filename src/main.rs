@@ -1,4 +1,3 @@
-mod exchange;
 mod exchanges;
 mod local_env;
 mod parse;
@@ -51,16 +50,21 @@ fn execute_backtest() {
 fn reset_data() {
     let tr = TimeRange::default();
 
-    // TODO: there is something out of order for the KuCoin exchange data!
     match exchanges::binance::BinanceExchange::save_testing_data(tr.clone()) {
         Ok(_) => println!("Binance - OK!"),
         Err(e) => println!("Binance - Error: {:?}", e),
+    }
+
+    match exchanges::coinbase::CoinbaseExchange::save_testing_data(tr.clone()) {
+        Ok(_) => println!("Coinbase - OK!"),
+        Err(e) => println!("Coinbase - Error: {:?}", e),
     }
 
     match exchanges::kucoin::KuCoinExchange::save_testing_data(tr.clone()) {
         Ok(_) => println!("KuCoin - OK!"),
         Err(e) => println!("KuCoin - Error: {:?}", e),
     }
+
     // TODO: 2. Update backtest to sort data and then go through only use datetimes.
 
     // where there is info from multiple exchanges.

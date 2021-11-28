@@ -1,5 +1,5 @@
 // use std::collections::BTreeMap;
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use crate::record;
 
@@ -15,9 +15,10 @@ impl Talaria {
     pub fn new() -> Self {
         // Why won't Hashmap::from work?
         let mut exchange_fees: HashMap<String, f64> = HashMap::new();
-        exchange_fees.insert("coinbase".to_owned(), 0.1 / 100_f64);
+        exchange_fees.insert("coinbase".to_owned(), 0.5 / 100_f64);
         exchange_fees.insert("binance".to_owned(), 0.1 / 100_f64);
         exchange_fees.insert("kraken".to_owned(), 0.26 / 100_f64);
+        exchange_fees.insert("kucoin".to_owned(), 0.1 / 100_f64);
 
         Self {
             exchange_fees,
@@ -92,7 +93,9 @@ impl Talaria {
 
     pub fn backtest(&mut self) {
         let coinbase_records = record::read_records_from_file("data/ATOM-USD-KuCoin.txt");
+        let exchange_1 = "kucoin";
         let binance_records = record::read_records_from_file("data/ATOM-USD-Binance.txt");
+        let exchange_2 = "binance";
 
         let mut coinbase_funds = 500_f64;
         let coinbase_coins = 1000_f64;
@@ -113,13 +116,13 @@ impl Talaria {
                     "Not same time {:?}, {:?}, {:?}",
                     line_num, coinbase_record.date, binance_record.date
                 );
-				break;
+                break;
             }
             line_num = line_num + 1;
             assert_eq!(coinbase_record.date, binance_record.date);
 
-            tlr.update_exchange_price("coinbase".to_owned(), coinbase_record.close);
-            tlr.update_exchange_price("binance".to_owned(), binance_record.close);
+            tlr.update_exchange_price(exchange_1.to_owned(), coinbase_record.close);
+            tlr.update_exchange_price(exchange_2.to_owned(), binance_record.close);
 
             match tlr.check_for_trade_and_value() {
                 Some(((max_exchange, min_exchange), _price_diff)) => {
@@ -129,7 +132,7 @@ impl Talaria {
                     let min_exchange_fee =
                         tlr.exchange_fees.get(&min_exchange.0).unwrap().to_owned();
 
-                    if max_exchange.0 == "coinbase".to_owned() {
+                    if max_exchange.0 == exchange_1.to_owned() {
                         trade_qty =
                             f64::min((binance_funds * 0.8) / min_exchange.1, coinbase_coins);
 
@@ -153,14 +156,14 @@ impl Talaria {
 
                             // pretend we send coins from one wallet to the other to balance out.
                             println!(
-                                "DT {:?}, Sell CB {:?}, buy on BN {:?}, and Total: {:?}",
+                                "DT {:?}, Sell on exchange 1 {:?}, buy on exchange 2 {:?}, and Total: {:?}",
                                 coinbase_record.date,
                                 coinbase_funds,
                                 binance_funds,
                                 coinbase_funds + binance_funds
                             );
                         }
-                    } else if max_exchange.0 == "binance".to_owned() {
+                    } else if max_exchange.0 == exchange_2.to_owned() {
                         trade_qty =
                             f64::min((coinbase_funds * 0.8) / min_exchange.1, binance_coins);
                         let binance_cost = max_exchange.1 * trade_qty;
@@ -183,7 +186,7 @@ impl Talaria {
 
                             // pretend we send coins from one wallet to the other to balance coin totals.
                             println!(
-                                "DT {:?}, Sell on BN {:?}, buy on CB {:?}, and Total: {:?}",
+                                "DT {:?}, Sell on exchange 2 {:?}, buy on exchange 1 {:?}, and Total: {:?}",
                                 coinbase_record.date,
                                 binance_funds,
                                 coinbase_funds,

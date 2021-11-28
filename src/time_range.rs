@@ -34,7 +34,7 @@ impl TimeRange {
             .unwrap();
 
         let end = DateTime::from(system_time);
-        TimeRange::new(start, end, 500_i64).unwrap()
+        TimeRange::new(start, end, 300_i64).unwrap()
     }
 }
 
@@ -56,17 +56,17 @@ impl Iterator for TimeRange {
             .checked_add_signed(self.interval_size)
             .unwrap();
 
-		if next_start.le(&self.end) {
-			self.start = next_start;
-		} else {
-			self.start = self.end;
-		}
+        if next_start.le(&self.end) {
+            self.start = next_start;
+        } else {
+            self.start = self.end;
+        }
 
-		Some(TimeRange {
-			start: current_start,
-			end: self.start,
-			interval_size: self.interval_size,
-		})
+        Some(TimeRange {
+            start: current_start,
+            end: self.start,
+            interval_size: self.interval_size,
+        })
     }
 }
 

@@ -1,11 +1,8 @@
 use crate::parse;
 use crate::record;
-use crate::{
-    time_range::{self, TimeRange},
-    traits::Exchange,
-};
+use crate::{time_range::TimeRange, traits::Exchange};
 use chrono::{DateTime, Duration, Utc};
-use serde::{Deserialize};
+use serde::Deserialize;
 use std::time::SystemTime;
 use std::{fmt::Display, str::FromStr, sync::mpsc};
 
@@ -13,24 +10,22 @@ pub struct KuCoinExchange;
 
 impl Exchange for KuCoinExchange {
     // KuCoin has limit of 1500 data points per request.
-    fn save_testing_data(
-        time_range: time_range::TimeRange,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    fn save_testing_data(time_range: TimeRange) -> Result<(), Box<dyn std::error::Error>> {
         let mut records: Vec<record::Record> = vec![];
 
         time_range.for_each(|sr: TimeRange| {
             let mut new_records = get_kline_data(sr.start, sr.end).unwrap();
-			new_records.reverse();
+            new_records.reverse();
             records.append(&mut new_records);
         });
 
-		//records.reverse();
+        //records.reverse();
         record::save_records_to_file("data/ATOM-USD-KuCoin.txt", records);
 
         Ok(())
     }
 
-    fn subscribe_to_data(tx: mpsc::Sender<record::Record>) {}
+    fn subscribe_to_data(_tx: mpsc::Sender<record::Record>) {}
 }
 
 fn get_kline_data(
@@ -120,15 +115,18 @@ mod tests {
         }
     }
 
-	#[test]
-	fn confirm_kucoin_lines_ordered() {
-		let records = record::read_records_from_file("data/ATOM-USD-KuCoin.txt");
-		let mut previous_dt = 0;
+    #[test]
+    fn confirm_kucoin_lines_ordered() {
+        let records = record::read_records_from_file("data/ATOM-USD-KuCoin.txt");
+        let mut previous_dt = 0;
 
-		for record in records {
-			println!("Previous Dt and current DT: {:?} {:?} ", previous_dt, record.date);
-			assert!(record.date.gt(&previous_dt));
-			previous_dt = record.date;
-		}
-	}
+        for record in records {
+            println!(
+                "Previous Dt and current DT: {:?} {:?} ",
+                previous_dt, record.date
+            );
+            assert!(record.date.gt(&previous_dt));
+            previous_dt = record.date;
+        }
+    }
 }

@@ -7,9 +7,7 @@ mod talaria;
 mod time_range;
 mod traits;
 
-use chrono::{DateTime, Duration};
 use std::env;
-use std::time::SystemTime;
 use time_range::TimeRange;
 use traits::Exchange;
 
@@ -51,13 +49,6 @@ fn execute_backtest() {
 }
 
 fn reset_data() {
-    // match exchange::save_exchange_data() {
-    //     Ok(_) => {}
-    //     Err(e) => {
-    //         println!("Error saving exchange data: {:?}", e);
-    //     }
-    // }
-
     let tr = TimeRange::default();
 
     // TODO: there is something out of order for the KuCoin exchange data!

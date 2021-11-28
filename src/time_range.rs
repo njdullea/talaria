@@ -30,7 +30,7 @@ impl TimeRange {
     pub fn default() -> Self {
         let system_time = SystemTime::now();
         let start = DateTime::from(system_time)
-            .checked_sub_signed(Duration::days(7))
+            .checked_sub_signed(Duration::days(3))
             .unwrap();
 
         let end = DateTime::from(system_time);

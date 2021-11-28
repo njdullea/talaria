@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
-use std::collections::HashMap;
+// use std::collections::BTreeMap;
+use std::{collections::HashMap};
 
 use crate::record;
 
@@ -90,8 +90,6 @@ impl Talaria {
         }
     }
 
-    pub fn backtest_v2(&mut self) {}
-
     pub fn backtest(&mut self) {
         let coinbase_records = record::read_records_from_file("data/ATOM-USD-KuCoin.txt");
         let binance_records = record::read_records_from_file("data/ATOM-USD-Binance.txt");
@@ -114,7 +112,8 @@ impl Talaria {
                 println!(
                     "Not same time {:?}, {:?}, {:?}",
                     line_num, coinbase_record.date, binance_record.date
-                )
+                );
+				break;
             }
             line_num = line_num + 1;
             assert_eq!(coinbase_record.date, binance_record.date);

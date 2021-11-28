@@ -91,7 +91,7 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
         // TODO: there is something wack going on with the order of coinbase data!
         coinbase_klines.into_iter().rev().for_each(|f| {
             coinbase_records.push(record::Record {
-                date: f.0.to_string(),
+                date: f.0 as u64,
                 open: f.3,
                 close: f.4,
                 high: f.2,
@@ -113,7 +113,7 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
                 for kline in klines {
                     let record = record::Record {
                         // Convert milliseconds into seconds.
-                        date: (kline.open_time / 1000).to_string(),
+                        date: (kline.open_time / 1000) as u64,
                         open: kline.open,
                         high: kline.high,
                         low: kline.low,
@@ -147,7 +147,7 @@ fn get_kraken_data(start: DateTime) -> Result<Vec<record::Record>, Box<dyn std::
 
     for kline in json.result.xatomzusd.iter() {
         let record = record::Record {
-            date: kline.0.to_string(),
+            date: kline.0 as u64,
             open: kline.1,
             high: kline.2,
             low: kline.3,
@@ -170,7 +170,7 @@ pub fn subscribe_to_binance_klines(tx: mpsc::Sender<record::Record>) {
                 let is_final_bar = kline_event.kline.is_final_bar.clone();
                 if is_final_bar {
                     let dp = record::Record {
-                        date: (kline_event.event_time / 1000_u64).to_string(),
+                        date: (kline_event.event_time / 1000_u64) as u64,
                         high: kline_event.kline.high.parse::<f64>().unwrap(),
                         low: kline_event.kline.low.parse::<f64>().unwrap(),
                         open: kline_event.kline.open.parse::<f64>().unwrap(),

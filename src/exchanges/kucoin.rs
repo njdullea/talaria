@@ -5,9 +5,9 @@ use crate::{
     traits::Exchange,
 };
 use chrono::{DateTime, Duration, Utc};
-use serde::{de::Error, Deserialize, Deserializer};
+use serde::{Deserialize};
 use std::time::SystemTime;
-use std::{borrow::Borrow, fmt::Display, str::FromStr, sync::mpsc};
+use std::{fmt::Display, str::FromStr, sync::mpsc};
 
 pub struct KuCoinExchange;
 
@@ -17,19 +17,14 @@ impl Exchange for KuCoinExchange {
         time_range: time_range::TimeRange,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let mut records: Vec<record::Record> = vec![];
-        println!("This is the time_range: {:?}", time_range);
 
         time_range.for_each(|sr: TimeRange| {
-            println!("Evalutating range: {:?}", sr);
             let mut new_records = get_kline_data(sr.start, sr.end).unwrap();
+			new_records.reverse();
             records.append(&mut new_records);
         });
-        // for sub_range in time_range.into_iter() {
-        // 	println!("Evalutating range: {:?}", sub_range);
-        // 	let mut new_records = get_kline_data(sub_range.start, sub_range.end)?;
-        // 	records.append(&mut new_records);
-        // }
 
+		//records.reverse();
         record::save_records_to_file("data/ATOM-USD-KuCoin.txt", records);
 
         Ok(())
@@ -57,7 +52,7 @@ fn get_kline_data(
 
     for kline in json.data {
         records.push(record::Record {
-            date: kline.0.to_string(),
+            date: kline.0 as u64,
             open: kline.1,
             close: kline.2,
             high: kline.3,
@@ -124,4 +119,16 @@ mod tests {
             Err(e) => println!("Err! {:?}", e),
         }
     }
+
+	#[test]
+	fn confirm_kucoin_lines_ordered() {
+		let records = record::read_records_from_file("data/ATOM-USD-KuCoin.txt");
+		let mut previous_dt = 0;
+
+		for record in records {
+			println!("Previous Dt and current DT: {:?} {:?} ", previous_dt, record.date);
+			assert!(record.date.gt(&previous_dt));
+			previous_dt = record.date;
+		}
+	}
 }

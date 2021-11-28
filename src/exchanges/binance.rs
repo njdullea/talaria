@@ -41,7 +41,7 @@ impl Exchange for BinanceExchange {
                     for kline in klines {
                         let record = record::Record {
                             // Convert milliseconds into seconds.
-                            date: (kline.open_time / 1000).to_string(),
+                            date: (kline.open_time / 1000) as u64,
                             open: kline.open,
                             high: kline.high,
                             low: kline.low,
@@ -70,7 +70,7 @@ impl Exchange for BinanceExchange {
                     let is_final_bar = kline_event.kline.is_final_bar.clone();
                     if is_final_bar {
                         let dp = record::Record {
-                            date: (kline_event.event_time / 1000_u64).to_string(),
+                            date: (kline_event.event_time / 1000_u64) as u64,
                             high: kline_event.kline.high.parse::<f64>().unwrap(),
                             low: kline_event.kline.low.parse::<f64>().unwrap(),
                             open: kline_event.kline.open.parse::<f64>().unwrap(),

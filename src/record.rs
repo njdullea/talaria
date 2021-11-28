@@ -5,7 +5,7 @@ use std::path::Path;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Record {
-    pub date: String,
+    pub date: u64,
     pub open: f64,
     pub close: f64,
     pub high: f64,

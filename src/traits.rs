@@ -1,5 +1,6 @@
-use std::sync::mpsc;
 use crate::record;
+use crate::time_range::TimeRange;
+use std::sync::mpsc;
 
 // pub trait Description {
 //     fn description(&self) -> &str;
@@ -13,8 +14,12 @@ use crate::record;
 //     fn default() -> Self;
 // }
 
+pub trait Next {
+    fn next();
+}
+
 pub trait Exchange {
-    fn save_testing_data(days: i64) -> Result<(), Box<dyn std::error::Error>>;
+    fn save_testing_data(time_range: TimeRange) -> Result<(), Box<dyn std::error::Error>>;
 
     fn subscribe_to_data(tx: mpsc::Sender<record::Record>);
 }

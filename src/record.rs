@@ -1,7 +1,7 @@
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::prelude::*;
 use std::path::Path;
-use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Record {
@@ -14,7 +14,7 @@ pub struct Record {
 }
 
 // Will overwrite an existing file.
-pub fn save_records_to_file(file_path: &str, records:Vec<Record>) {
+pub fn save_records_to_file(file_path: &str, records: Vec<Record>) {
     let path = Path::new(file_path);
     let display = path.display();
 
@@ -25,7 +25,7 @@ pub fn save_records_to_file(file_path: &str, records:Vec<Record>) {
     };
 
     let content = serde_json::to_string(&records).unwrap();
-    
+
     // Write the string to `file`, returns `io::Result<()>`
     match file.write_all(content.as_bytes()) {
         Err(why) => panic!("couldn't write to {}: {}", display, why),
@@ -40,4 +40,3 @@ pub fn read_records_from_file(file_path: &str) -> Vec<Record> {
 
     records
 }
-

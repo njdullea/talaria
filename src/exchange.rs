@@ -1,36 +1,30 @@
 use crate::local_env;
 use crate::record;
-use std::time::SystemTime;
-use std::vec;
-use serde::{de::Error, Deserialize, Deserializer};
-use reqwest;
 use binance::api::*;
 use binance::config;
 use binance::market::*;
 use binance::websockets::*;
-use std::sync::atomic::AtomicBool;
-use std::sync::mpsc;
 use chrono::Duration;
 use coinbase_pro_rs::structs::DateTime;
 use coinbase_pro_rs::{Public, Sync, MAIN_URL};
+use reqwest;
+use serde::{de::Error, Deserialize, Deserializer};
+use std::sync::atomic::AtomicBool;
+use std::sync::mpsc;
+use std::time::SystemTime;
+use std::vec;
 
 // time, open, high, low, close, vwap, volume, count
 #[derive(Deserialize, Debug)]
-struct KrakenKLine (
-    u64, 
-    #[serde(deserialize_with = "f64_from_string")]
-    f64, 
-    #[serde(deserialize_with = "f64_from_string")]
-    f64, 
-    #[serde(deserialize_with = "f64_from_string")]
-    f64, 
-    #[serde(deserialize_with = "f64_from_string")]
-    f64, 
-    #[serde(deserialize_with = "f64_from_string")]
-    f64, 
-    #[serde(deserialize_with = "f64_from_string")]
-    f64,
-    u64
+struct KrakenKLine(
+    u64,
+    #[serde(deserialize_with = "f64_from_string")] f64,
+    #[serde(deserialize_with = "f64_from_string")] f64,
+    #[serde(deserialize_with = "f64_from_string")] f64,
+    #[serde(deserialize_with = "f64_from_string")] f64,
+    #[serde(deserialize_with = "f64_from_string")] f64,
+    #[serde(deserialize_with = "f64_from_string")] f64,
+    u64,
 );
 
 fn f64_from_string<'de, D>(deserializer: D) -> Result<f64, D::Error>
@@ -61,7 +55,8 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
     let binance_secret_key = local_env::get_env_var("BINANCE_US_SECRET_KEY");
     let api_endpoint = "https://api.binance.us";
     let config = config::Config::default().set_rest_api_endpoint(api_endpoint);
-    let binance_market: Market = Binance::new_with_config(binance_api_key, binance_secret_key, &config);
+    let binance_market: Market =
+        Binance::new_with_config(binance_api_key, binance_secret_key, &config);
     let coinbase_client: Public<Sync> = Public::new(MAIN_URL);
 
     let system_time = SystemTime::now();
@@ -70,12 +65,13 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
         .checked_sub_signed(Duration::weeks(4))
         .unwrap();
 
-    let mut end = start.clone()
+    let mut end = start
+        .clone()
         .checked_add_signed(Duration::minutes(300))
         .unwrap();
 
     // Kraken does not have any limits on how much OHLC data in one request.
-    // Additionally, Kraken records go right up 
+    // Additionally, Kraken records go right up
     let kraken_records = get_kraken_data(start).unwrap();
     record::save_records_to_file("data/ATOM-USD-Kraken.txt", kraken_records);
 
@@ -100,7 +96,7 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
                 close: f.4,
                 high: f.2,
                 low: f.1,
-                volume: f.5
+                volume: f.5,
             });
         });
 
@@ -111,7 +107,7 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
             start.timestamp_millis() as u64,
             end.timestamp_millis() as u64,
         )?;
-        
+
         match binance_klines {
             binance::model::KlineSummaries::AllKlineSummaries(klines) => {
                 for kline in klines {
@@ -124,19 +120,15 @@ pub fn save_exchange_data() -> Result<(), Box<dyn std::error::Error>> {
                         close: kline.close,
                         volume: kline.volume,
                     };
-    
+
                     binance_records.push(record);
                 }
             }
         }
 
-        start = start
-            .checked_add_signed(Duration::minutes(300))
-            .unwrap();
-        end = end
-            .checked_add_signed(Duration::minutes(300))
-            .unwrap()
-    };
+        start = start.checked_add_signed(Duration::minutes(300)).unwrap();
+        end = end.checked_add_signed(Duration::minutes(300)).unwrap()
+    }
 
     record::save_records_to_file("data/ATOM-USD-Coinbase.txt", coinbase_records);
     record::save_records_to_file("data/ATOM-USD-Binance.txt", binance_records);

@@ -2,18 +2,6 @@ use crate::record;
 use crate::time_range::TimeRange;
 use std::sync::mpsc;
 
-// pub trait Description {
-//     fn description(&self) -> &str;
-// }
-
-// pub trait Reset {
-//     fn reset(&self);
-// }
-
-// pub trait Default {
-//     fn default() -> Self;
-// }
-
 pub trait Next {
     fn next();
 }

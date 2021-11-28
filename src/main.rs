@@ -1,14 +1,13 @@
 mod exchanges;
-mod local_env;
-mod parse;
+mod utilities;
 mod record;
 mod talaria;
-mod time_range;
 mod traits;
 
 use std::env;
 use time_range::TimeRange;
 use traits::Exchange;
+use utilities::{local_env, parse, time_range};
 
 fn main() {
     let args: Vec<String> = env::args().collect();

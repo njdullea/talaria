@@ -1,9 +1,8 @@
 use crate::parse;
 use crate::record;
 use crate::{time_range::TimeRange, traits::Exchange};
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use serde::Deserialize;
-use std::time::SystemTime;
 use std::{fmt::Display, str::FromStr, sync::mpsc};
 
 pub struct KuCoinExchange;
@@ -19,7 +18,6 @@ impl Exchange for KuCoinExchange {
             records.append(&mut new_records);
         });
 
-        //records.reverse();
         record::save_records_to_file("data/ATOM-USD-KuCoin.txt", records);
 
         Ok(())
@@ -98,14 +96,14 @@ mod tests {
 
     #[test]
     fn get_kucoin_klines() {
-        let system_time = SystemTime::now();
+        let system_time = std::time::SystemTime::now();
         let start = DateTime::<Utc>::from(system_time)
-            .checked_sub_signed(Duration::minutes(5))
+            .checked_sub_signed(chrono::Duration::minutes(5))
             .unwrap();
 
         let end = start
             .clone()
-            .checked_add_signed(Duration::minutes(4))
+            .checked_add_signed(chrono::Duration::minutes(4))
             .unwrap();
 
         let r = get_kline_data(start, end);

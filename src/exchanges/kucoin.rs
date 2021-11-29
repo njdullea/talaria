@@ -3,9 +3,37 @@ use crate::record;
 use crate::{time_range::TimeRange, traits::Exchange};
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
+use std::error;
 use std::{fmt::Display, str::FromStr, sync::mpsc};
+// use tungstenite::{connect, Message};
 
 pub struct KuCoinExchange;
+
+impl KuCoinExchange {
+    pub fn test_ws() -> Result<(), Box<dyn error::Error>> {
+
+
+        let url = String::from("https://api.kucoin.com/api/v1/bullet-public");
+        // let res = reqwest::blocking::get(url)?.text()?;
+        let client = reqwest::blocking::Client::new();
+        let res = client.post(url)
+            // .body("")
+            .send()?;
+
+        // TODO: write serde support for response. Then setup web socket connection.
+        let data = res.text();
+        println!("Response: {:?}", data);
+
+        // let ws_url = 
+        // let (mut socket, response) =
+        //     connect(reqwest::Url::parse("wss://push1-v2.kucoin.com/").unwrap()).expect("Can't connect");
+
+        
+        // var socket = new WebSocket("wss://push1-v2.kucoin.com/endpoint?token=xxx&[connectId=xxxxx]");
+        
+        Ok(())
+    }
+}
 
 impl Exchange for KuCoinExchange {
     // KuCoin has limit of 1500 data points per request.

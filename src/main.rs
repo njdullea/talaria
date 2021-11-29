@@ -1,10 +1,11 @@
 mod exchanges;
-mod utilities;
 mod record;
 mod talaria;
 mod traits;
+mod utilities;
 
 use std::env;
+use exchanges::kucoin;
 use time_range::TimeRange;
 use traits::Exchange;
 use utilities::{local_env, parse, time_range};
@@ -20,6 +21,8 @@ fn main() {
                 execute_backtest();
             } else if arg == "talaria" {
                 execute_talaria();
+            } else if arg == "__dev__" {
+                execute_dev();
             }
         }
         Err(err) => {
@@ -32,6 +35,14 @@ fn parse_config(args: &[String]) -> Result<&str, &'static str> {
     match args.get(1) {
         None => Err("Please provide and execution argument."),
         Some(e) => Ok(e),
+    }
+}
+
+fn execute_dev() {
+    let res = kucoin::KuCoinExchange::test_ws();
+    match res {
+        Ok(_) => println!("WS RES - OK!"),
+        Err(e) => println!("WS RES - Error: {:?}", e),
     }
 }
 
@@ -65,6 +76,5 @@ fn reset_data() {
     }
 
     // TODO: 2. Update backtest to sort data and then go through only use datetimes.
-
     // where there is info from multiple exchanges.
 }

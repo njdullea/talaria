@@ -108,6 +108,7 @@ impl Talaria {
 
         let mut line_num = 0;
 
+        // When exchanges are doing maintenance there will be no data for a set period of time. 
         // Make BTreeMap (sorted hashamp) and go through each data set to sort by datetime. Use struct with each exchange and Option?
 
         for (coinbase_record, binance_record) in coinbase_records.iter().zip(binance_records.iter())
@@ -127,7 +128,6 @@ impl Talaria {
 
             match tlr.check_for_trade_and_value() {
                 Some(((max_exchange, min_exchange), _price_diff)) => {
-                    // println!("Price diff: {:?}", price_diff);
                     let max_exchange_fee =
                         tlr.exchange_fees.get(&max_exchange.0).unwrap().to_owned();
                     let min_exchange_fee =

@@ -3,14 +3,13 @@ use crate::record;
 use crate::{time_range::TimeRange, traits::Exchange};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::{to_vec, to_string};
+use serde_json;
 use std::error;
 use std::{fmt::Display, str::FromStr, sync::mpsc};
 use tungstenite::{connect, Message};
 
 pub struct KuCoinExchange;
 
-// Maybe I can use serde to turn it into data, then parse as Vec[u8].
 #[derive(Serialize)]
 struct KuCoinWSSSubscription {
     id: u64,
@@ -29,6 +28,22 @@ struct KuCoinPing {
     type_: String,
 }
 
+#[derive(Deserialize, Debug)]
+struct KuCoinKLineData {
+    symbol: String,
+    candles: KuCoinKLine<u64, f64>,
+    time: u64,
+}
+
+#[derive(Deserialize, Debug)]
+struct KuCoinKLineSubscriptionData {
+    #[serde(rename = "type")]
+    type_: String,
+    topic: String,
+    subject: String,
+    data: KuCoinKLineData,
+}
+
 impl KuCoinExchange {
     pub fn test_ws() -> Result<(), Box<dyn error::Error>> {
         let url = String::from("https://api.kucoin.com/api/v1/bullet-public");
@@ -44,12 +59,7 @@ impl KuCoinExchange {
         let connect_id = "gQdf7jkn1we5ydthhh";
         ws_url.push_str(connect_id);
 
-        let (mut socket, response) = connect(reqwest::Url::parse(&ws_url).unwrap()).expect("Can't connect");
-
-        for (ref header, _value) in response.headers() {
-            println!("* {}", header);
-        }
-
+        let (mut socket, _response) = connect(reqwest::Url::parse(&ws_url).unwrap()).expect("Can't connect");
         let subscription_request = KuCoinWSSSubscription {
             id: 92458671349721,
             type_: String::from("subscribe"),
@@ -60,21 +70,19 @@ impl KuCoinExchange {
 
         let mut send_subscribe = false;
     
-        // socket.write_message(bn).unwrap();
-        // socket.write_message(Message::Text("Hello WebSocket".into())).unwrap();
         loop {
 
             let msg = socket.read_message().expect("Error reading message");
             println!("Received: {}", msg);
-            // match socket.read_message() {
-            //     Ok(msg) => println!("Message: {:?}", msg),
-            //     Err(e) => println!("Err reading message: {:?}", e),
-            // }
+
+            let kline: Option<KuCoinKLineSubscriptionData> = match serde_json::from_str(&msg.to_string().as_str()) {
+                Ok(kl) => Some(kl),
+                Err(_e) => None,
+            };
+
+            println!("Here is the kline: {:?}", kline);
 
             if !send_subscribe {
-                // let vlr = to_vec(&subscription_request).unwrap();
-                // let bn = Message::Binary(vlr);
-                // socket.write_message(bn).unwrap();
                 let ping = KuCoinPing {
                     id: 9245910220728,
                     type_: String::from("ping")
@@ -85,12 +93,11 @@ impl KuCoinExchange {
                     type_: String::from("pong")
                 };
 
-                let _ping_msg = Message::Ping(to_vec(&ping).unwrap());
-                let _pong_msg = Message::Pong(to_vec(&pong).unwrap());
-                let bn = Message::Text(to_string(&subscription_request).unwrap());
-                println!("Here is the bn: {:?}", bn);
+                let _ping_msg = Message::Ping(serde_json::to_vec(&ping).unwrap());
+                let _pong_msg = Message::Pong(serde_json::to_vec(&pong).unwrap());
+                let subscribe = Message::Text(serde_json::to_string(&subscription_request).unwrap());
                 
-                match socket.write_message(bn) {
+                match socket.write_message(subscribe) {
                     Ok(()) => println!("Message sent!"),
                     Err(e) => println!("Error sending message : {:?}", e)
                 }
@@ -184,7 +191,6 @@ struct KuCoinResponse {
     code: u64,
     data: Vec<KuCoinKLine<u64, f64>>,
 }
-
 
 // THESE STRUCTS ARE FOR DESERIALIZING THE TOKEN REQUEST
 #[derive(Deserialize, Debug)]

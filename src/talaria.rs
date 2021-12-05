@@ -97,12 +97,13 @@ impl Talaria {
         let binance_records = record::read_records_from_file("data/ATOM-USD-Binance.txt");
         let exchange_2 = "binance";
 
-        let mut coinbase_funds = 500_f64;
-        let coinbase_coins = 1000_f64;
-        let mut binance_funds = 500_f64;
-        let binance_coins = 1000_f64;
+        let mut coinbase_funds = 300_f64;
+        let coinbase_coins = 10_f64;
+        let mut binance_funds = 300_f64;
+        let binance_coins = 10_f64;
 
         let mut trade_qty: f64;
+		let trade_percent_of_funds: f64 = 0.8;
         let mut tlr = Talaria::new();
 
         let mut line_num = 0;
@@ -134,7 +135,7 @@ impl Talaria {
 
                     if max_exchange.0 == exchange_1.to_owned() {
                         trade_qty =
-                            f64::min((binance_funds * 0.8) / min_exchange.1, coinbase_coins);
+                            f64::min((binance_funds * trade_percent_of_funds) / min_exchange.1, coinbase_coins);
 
                         let coinbase_cost = max_exchange.1 * trade_qty;
                         let coinbase_fee = coinbase_cost * max_exchange_fee;
@@ -165,7 +166,7 @@ impl Talaria {
                         }
                     } else if max_exchange.0 == exchange_2.to_owned() {
                         trade_qty =
-                            f64::min((coinbase_funds * 0.8) / min_exchange.1, binance_coins);
+                            f64::min((coinbase_funds * trade_percent_of_funds) / min_exchange.1, binance_coins);
                         let binance_cost = max_exchange.1 * trade_qty;
                         let binance_fee = binance_cost * max_exchange_fee;
                         let binance_total = binance_cost + binance_fee;

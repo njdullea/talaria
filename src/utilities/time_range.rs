@@ -16,6 +16,8 @@ impl TimeRange {
         interval_size: i64,
     ) -> Result<Self, &'static str> {
         // Binance has max limit of 500 items, Coinbase 300, Kraken 1500, KuCoin 1500
+
+        // Maybe I need to just implement a way to update step size?
         if interval_size > 500_i64 {
             return Err("Max interval size is 500.");
         }
@@ -30,7 +32,7 @@ impl TimeRange {
     pub fn default() -> Self {
         let system_time = SystemTime::now();
         let start = DateTime::from(system_time)
-            .checked_sub_signed(Duration::days(3))
+            .checked_sub_signed(Duration::days(7))
             .unwrap();
 
         let end = DateTime::from(system_time);

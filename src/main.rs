@@ -33,7 +33,7 @@ fn main() {
 
 fn parse_config(args: &[String]) -> Result<&str, &'static str> {
     match args.get(1) {
-        None => Err("Please provide and execution argument."),
+        None => Err("Error in main: Please provide an execution argument."),
         Some(e) => Ok(e),
     }
 }
@@ -42,7 +42,7 @@ fn execute_dev() {
     let res = kucoin::KuCoinExchange::test_ws();
     match res {
         Ok(_) => println!("WS RES - OK!"),
-        Err(e) => println!("WS RES - Error: {:?}", e),
+        Err(e) => println!("WS RES - Error: {:?}", e.to_string()),
     }
 }
 
@@ -65,10 +65,10 @@ fn reset_data() {
         Err(e) => println!("Binance - Error: {:?}", e),
     }
 
-    match exchanges::coinbase::CoinbaseExchange::save_testing_data(tr.clone()) {
-        Ok(_) => println!("Coinbase - OK!"),
-        Err(e) => println!("Coinbase - Error: {:?}", e),
-    }
+    // match exchanges::coinbase::CoinbaseExchange::save_testing_data(tr.clone()) {
+    //     Ok(_) => println!("Coinbase - OK!"),
+    //     Err(e) => println!("Coinbase - Error: {:?}", e),
+    // }
 
     match exchanges::kucoin::KuCoinExchange::save_testing_data(tr.clone()) {
         Ok(_) => println!("KuCoin - OK!"),

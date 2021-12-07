@@ -18,7 +18,11 @@ impl Exchange for KrakenExchange {
         Ok(())
     }
 
-    fn subscribe_to_data(_tx: mpsc::Sender<record::Record>) {}
+    fn subscribe_to_data(
+        _tx: mpsc::Sender<record::Record>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        Ok(())
+    }
 }
 
 fn get_kline_data(start: DateTime<Utc>) -> Result<Vec<record::Record>, Box<dyn std::error::Error>> {

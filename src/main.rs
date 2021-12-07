@@ -4,11 +4,14 @@ mod talaria;
 mod traits;
 mod utilities;
 
-use std::env;
 use exchanges::kucoin;
+use std::env;
 use time_range::TimeRange;
 use traits::Exchange;
 use utilities::{local_env, parse, time_range};
+
+use std::sync::mpsc;
+use std::thread;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -47,9 +50,19 @@ fn execute_dev() {
 }
 
 fn execute_talaria() {
+    let (data_point_tx, data_point_rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        exchanges::kucoin::KuCoinExchange::subscribe_to_data(data_point_tx);
+    });
     // TODO: when we execute for real, we need to make sure that if either of the websockets fails
     // that way immediately stop everything else.
     println!("Would execute talaria now!");
+
+    for received in data_point_rx {
+        // rsi_trader.next(received);
+        println!("Received: {:?}", received);
+    }
 }
 
 fn execute_backtest() {

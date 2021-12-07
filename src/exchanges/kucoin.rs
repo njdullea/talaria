@@ -48,8 +48,7 @@ impl KuCoinExchange {
     pub fn test_ws() -> Result<(), Box<dyn error::Error>> {
         let url = String::from("https://api.kucoin.com/api/v1/bullet-public");
         let client = reqwest::blocking::Client::new();
-        let res = client.post(url)
-            .send()?;
+        let res = client.post(url).send()?;
 
         let data: KuCoinTokenRequestResponse = res.json()?;
         let mut ws_url = String::from(data.data.instance_servers[0].endpoint.clone());
@@ -59,7 +58,8 @@ impl KuCoinExchange {
         let connect_id = "gQdf7jkn1we5ydthhh";
         ws_url.push_str(connect_id);
 
-        let (mut socket, _response) = connect(reqwest::Url::parse(&ws_url).unwrap()).expect("Can't connect");
+        let (mut socket, _response) =
+            connect(reqwest::Url::parse(&ws_url).unwrap()).expect("Can't connect");
         let subscription_request = KuCoinWSSSubscription {
             id: 92458671349721,
             type_: String::from("subscribe"),
@@ -69,39 +69,40 @@ impl KuCoinExchange {
         };
 
         let mut send_subscribe = false;
-    
-        loop {
 
+        loop {
             let msg = socket.read_message().expect("Error reading message");
             println!("Received: {}", msg);
 
-            let kline: Option<KuCoinKLineSubscriptionData> = match serde_json::from_str(&msg.to_string().as_str()) {
-                Ok(kl) => Some(kl),
-                Err(_e) => None,
-            };
+            let kline: Option<KuCoinKLineSubscriptionData> =
+                match serde_json::from_str(&msg.to_string().as_str()) {
+                    Ok(kl) => Some(kl),
+                    Err(_e) => None,
+                };
 
             println!("Here is the kline: {:?}", kline);
 
             if !send_subscribe {
                 let ping = KuCoinPing {
                     id: 9245910220728,
-                    type_: String::from("ping")
+                    type_: String::from("ping"),
                 };
 
                 let pong = KuCoinPing {
                     id: 9245910220729,
-                    type_: String::from("pong")
+                    type_: String::from("pong"),
                 };
 
                 let _ping_msg = Message::Ping(serde_json::to_vec(&ping).unwrap());
                 let _pong_msg = Message::Pong(serde_json::to_vec(&pong).unwrap());
-                let subscribe = Message::Text(serde_json::to_string(&subscription_request).unwrap());
-                
+                let subscribe =
+                    Message::Text(serde_json::to_string(&subscription_request).unwrap());
+
                 match socket.write_message(subscribe) {
                     Ok(()) => println!("Message sent!"),
-                    Err(e) => println!("Error sending message : {:?}", e)
+                    Err(e) => println!("Error sending message : {:?}", e),
                 }
-                
+
                 send_subscribe = true;
             }
         }
@@ -124,7 +125,58 @@ impl Exchange for KuCoinExchange {
         Ok(())
     }
 
-    fn subscribe_to_data(_tx: mpsc::Sender<record::Record>) {}
+    fn subscribe_to_data(_tx: mpsc::Sender<record::Record>) -> Result<(), Box<dyn error::Error>> {
+        let url = String::from("https://api.kucoin.com/api/v1/bullet-public");
+        let client = reqwest::blocking::Client::new();
+        let res = client.post(url).send()?;
+
+        let data: KuCoinTokenRequestResponse = res.json()?;
+        let mut ws_url = String::from(data.data.instance_servers[0].endpoint.clone());
+        ws_url.push_str("?token=");
+        ws_url.push_str(data.data.token.as_str());
+        ws_url.push_str("&connectId=");
+        let connect_id = "gQdf7jkn1we5ydthhh";
+        ws_url.push_str(connect_id);
+
+        let (mut socket, _response) =
+            connect(reqwest::Url::parse(&ws_url).unwrap()).expect("Can't connect");
+        let subscription_request = KuCoinWSSSubscription {
+            id: 92458671349721,
+            type_: String::from("subscribe"),
+            topic: String::from("/market/candles:ATOM-USDT_1min"),
+            private_channel: false,
+            response: true,
+        };
+
+        let mut send_subscribe = false;
+
+        loop {
+            let msg = socket.read_message().expect("Error reading message");
+            println!("Received: {}", msg);
+
+            let kline: Option<KuCoinKLineSubscriptionData> =
+                match serde_json::from_str(&msg.to_string().as_str()) {
+                    Ok(kl) => Some(kl),
+                    Err(_e) => None,
+                };
+
+            println!("Here is the kline: {:?}", kline);
+
+            // TODO: make record and transmit to receiver
+
+            if !send_subscribe {
+                let subscribe =
+                    Message::Text(serde_json::to_string(&subscription_request).unwrap());
+
+                match socket.write_message(subscribe) {
+                    Ok(()) => println!("Message sent!"),
+                    Err(e) => println!("Error sending message : {:?}", e),
+                }
+
+                send_subscribe = true;
+            }
+        }
+    }
 }
 
 fn get_kline_data(
@@ -200,21 +252,21 @@ struct KuCoinEndpoint {
     encrypt: bool,
     protocol: String,
     ping_interval: u64,
-    ping_timeout: u64
+    ping_timeout: u64,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct KuCoinTokenData {
     token: String,
-    instance_servers: Vec<KuCoinEndpoint>
+    instance_servers: Vec<KuCoinEndpoint>,
 }
 
 #[derive(Deserialize, Debug)]
 struct KuCoinTokenRequestResponse {
     #[serde(deserialize_with = "parse::u64_from_string")]
     code: u64,
-    data: KuCoinTokenData
+    data: KuCoinTokenData,
 }
 
 #[cfg(test)]

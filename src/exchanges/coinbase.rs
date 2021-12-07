@@ -40,7 +40,9 @@ impl Exchange for CoinbaseExchange {
         Ok(())
     }
 
-    fn subscribe_to_data(_tx: mpsc::Sender<record::Record>) {
+    fn subscribe_to_data(
+        _tx: mpsc::Sender<record::Record>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // let keep_running = AtomicBool::new(true); // Used to control the event loop
         // let kline: String = format!("{}", "bnbbtc@kline_1m");
 
@@ -74,5 +76,6 @@ impl Exchange for CoinbaseExchange {
         //     }
         // }
         // web_socket.disconnect().unwrap();
+        Ok(())
     }
 }

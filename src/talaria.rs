@@ -103,12 +103,12 @@ impl Talaria {
         let binance_coins = 10_f64;
 
         let mut trade_qty: f64;
-		let trade_percent_of_funds: f64 = 0.8;
+        let trade_percent_of_funds: f64 = 0.8;
         let mut tlr = Talaria::new();
 
         let mut line_num = 0;
 
-        // When exchanges are doing maintenance there will be no data for a set period of time. 
+        // When exchanges are doing maintenance there will be no data for a set period of time.
         // Make BTreeMap (sorted hashamp) and go through each data set to sort by datetime. Use struct with each exchange and Option?
 
         for (coinbase_record, binance_record) in coinbase_records.iter().zip(binance_records.iter())
@@ -134,8 +134,10 @@ impl Talaria {
                         tlr.exchange_fees.get(&min_exchange.0).unwrap().to_owned();
 
                     if max_exchange.0 == exchange_1.to_owned() {
-                        trade_qty =
-                            f64::min((binance_funds * trade_percent_of_funds) / min_exchange.1, coinbase_coins);
+                        trade_qty = f64::min(
+                            (binance_funds * trade_percent_of_funds) / min_exchange.1,
+                            coinbase_coins,
+                        );
 
                         let coinbase_cost = max_exchange.1 * trade_qty;
                         let coinbase_fee = coinbase_cost * max_exchange_fee;
@@ -165,8 +167,10 @@ impl Talaria {
                             );
                         }
                     } else if max_exchange.0 == exchange_2.to_owned() {
-                        trade_qty =
-                            f64::min((coinbase_funds * trade_percent_of_funds) / min_exchange.1, binance_coins);
+                        trade_qty = f64::min(
+                            (coinbase_funds * trade_percent_of_funds) / min_exchange.1,
+                            binance_coins,
+                        );
                         let binance_cost = max_exchange.1 * trade_qty;
                         let binance_fee = binance_cost * max_exchange_fee;
                         let binance_total = binance_cost + binance_fee;

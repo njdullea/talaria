@@ -19,7 +19,7 @@ impl Exchange for KrakenExchange {
     }
 
     fn subscribe_to_data(
-        _tx: mpsc::Sender<record::Record>,
+        _tx: flume::Sender<Result<record::Record, &'static str>>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         Ok(())
     }
@@ -36,6 +36,7 @@ fn get_kline_data(start: DateTime<Utc>) -> Result<Vec<record::Record>, Box<dyn s
 
     for kline in json.result.xatomzusd.iter() {
         let record = record::Record {
+            exchange: record::Exchange::Kraken,
             date: kline.0 as u64,
             open: kline.1,
             high: kline.2,

@@ -4,13 +4,14 @@ mod talaria;
 mod traits;
 mod utilities;
 
+use core::panic;
 use exchanges::kucoin;
+use flume::{Receiver, Sender};
 use std::env;
 use time_range::TimeRange;
 use traits::Exchange;
 use utilities::{local_env, parse, time_range};
 
-use std::sync::mpsc;
 use std::thread;
 
 fn main() {
@@ -50,18 +51,71 @@ fn execute_dev() {
 }
 
 fn execute_talaria() {
-    let (data_point_tx, data_point_rx) = mpsc::channel();
+    // TODO: convert channel to result with record so we can match on ok or err and if err cancel the program
+    let (record_tx, record_rx): (Sender<Result<record::Record, &'static str>>, Receiver<Result<record::Record, &'static str>>) =
+        flume::bounded(32);
+
+    let record_tx1 = record_tx.clone();
+    // TODO: something is ending the kucoin thread. I'm guessing it is ping messages not being turned into json properly.
+    // 1. Need to figure out why something in thread failing doesnt stop main.
+    // 2. Need to find whats breaking in the thread and fix it.
+    thread::spawn(move || {
+        let err = exchanges::kucoin::KuCoinExchange::subscribe_to_data(record_tx1);
+        match err {
+            Ok(_) => {}
+            // TODO: include e in error
+            // TODO: having a panic doesn't seem to be ending the program properly?
+            Err(_e) => {
+                println!("Error in the kucoin thread we should end!!!!!!!!!!!!!!!!!");
+                std::process::exit(1);
+            },
+        }
+    });
 
     thread::spawn(move || {
-        exchanges::kucoin::KuCoinExchange::subscribe_to_data(data_point_tx);
+        let err = exchanges::binance::BinanceExchange::subscribe_to_data(record_tx);
+        match err {
+            Ok(_) => {}
+            // TODO: include e in error
+            Err(_e) => {
+                println!("Error in the binance thread we should end!!!!!!!!!!!!!!!!");
+                std::process::exit(1);
+            },
+        }
     });
-    // TODO: when we execute for real, we need to make sure that if either of the websockets fails
-    // that way immediately stop everything else.
-    println!("Would execute talaria now!");
 
-    for received in data_point_rx {
-        // rsi_trader.next(received);
-        println!("Received: {:?}", received);
+    let mut tlr = talaria::Talaria::new();
+    for received in record_rx {
+        match received {
+            Ok(record) => {
+                println!("Datetime: {:?}", record.date);
+                tlr.update_exchange_price(record.exchange.to_string(), record.close);
+                let trade_option = tlr.check_for_trade_and_value();
+
+                match trade_option {
+                    Some(((max_exchange, min_exchange), price_diff)) => {
+                        let max_exchange_fee = tlr.exchange_fees.get(&max_exchange.0).unwrap().to_owned();
+                        let min_exchange_fee = tlr.exchange_fees.get(&min_exchange.0).unwrap().to_owned();
+
+                        // buy on the low sell on the high
+                        let fees =
+                            (max_exchange.1 * max_exchange_fee) + (min_exchange.1 * min_exchange_fee);
+                        if price_diff > fees {
+                            let profit = price_diff - fees;
+                            println!(
+                                "Buy on: {:?}, sell on: {:?}, price diff: {:?}, fees: {:}, and profit {:?}",
+                                max_exchange, min_exchange, price_diff, fees, profit
+                            );
+                        }
+                    }
+                    None => {}
+                }
+            },
+            Err(e) => {
+                println!("Error while executing talaria. Exiting. Error: {:?}", e);
+                std::process::exit(1);
+            }
+        }
     }
 }
 

@@ -25,6 +25,7 @@ impl Exchange for CoinbaseExchange {
 
             coinbase_klines.into_iter().rev().for_each(|f| {
                 coinbase_records.push(record::Record {
+                    exchange: record::Exchange::Coinbase,
                     date: f.0 as u64,
                     open: f.3,
                     close: f.4,
@@ -41,7 +42,7 @@ impl Exchange for CoinbaseExchange {
     }
 
     fn subscribe_to_data(
-        _tx: mpsc::Sender<record::Record>,
+        _tx: flume::Sender<Result<record::Record, &'static str>>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         // let keep_running = AtomicBool::new(true); // Used to control the event loop
         // let kline: String = format!("{}", "bnbbtc@kline_1m");

@@ -1,10 +1,26 @@
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::fs;
 use std::io::prelude::*;
 use std::path::Path;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+pub enum Exchange {
+    Coinbase,
+    Binance,
+    Kraken,
+    Kucoin,
+}
+
+impl fmt::Display for Exchange {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct Record {
+    pub exchange: Exchange,
     pub date: u64,
     pub open: f64,
     pub close: f64,
@@ -12,6 +28,12 @@ pub struct Record {
     pub low: f64,
     pub volume: f64,
 }
+
+// impl Copy for Record {
+//     fn copy(&self) -> Self {
+
+//     }
+// }
 
 // Will overwrite an existing file.
 pub fn save_records_to_file(file_path: &str, records: Vec<Record>) {

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use crate::record;
 
 pub struct Talaria {
-    exchange_fees: HashMap<String, f64>,
+    pub exchange_fees: HashMap<String, f64>,
     exchange_prices: HashMap<String, f64>,
 }
 
@@ -16,9 +16,13 @@ impl Talaria {
         // Why won't Hashmap::from work?
         let mut exchange_fees: HashMap<String, f64> = HashMap::new();
         exchange_fees.insert("coinbase".to_owned(), 0.5 / 100_f64);
+        exchange_fees.insert("Coinbase".to_owned(), 0.5 / 100_f64);
         exchange_fees.insert("binance".to_owned(), 0.1 / 100_f64);
+        exchange_fees.insert("Binance".to_owned(), 0.1 / 100_f64);
         exchange_fees.insert("kraken".to_owned(), 0.26 / 100_f64);
+        exchange_fees.insert("Kraken".to_owned(), 0.26 / 100_f64);
         exchange_fees.insert("kucoin".to_owned(), 0.1 / 100_f64);
+        exchange_fees.insert("Kucoin".to_owned(), 0.1 / 100_f64);
 
         Self {
             exchange_fees,

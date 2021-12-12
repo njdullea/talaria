@@ -40,6 +40,7 @@ impl Exchange for BinanceExchange {
                 binance::model::KlineSummaries::AllKlineSummaries(klines) => {
                     for kline in klines {
                         let record = record::Record {
+                            exchange: record::Exchange::Binance,
                             // Convert milliseconds into seconds.
                             date: (kline.open_time / 1000) as u64,
                             open: kline.open,
@@ -61,26 +62,24 @@ impl Exchange for BinanceExchange {
     }
 
     fn subscribe_to_data(
-        tx: mpsc::Sender<record::Record>,
+        tx: flume::Sender<Result<record::Record, &'static str>>,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let keep_running = AtomicBool::new(true); // Used to control the event loop
-        let kline: String = format!("{}", "bnbbtc@kline_1m");
+        let kline: String = format!("{}", "atomusdt@kline_1m");
 
         let mut web_socket: WebSockets = WebSockets::new(|event: WebsocketEvent| {
             match event {
                 WebsocketEvent::Kline(kline_event) => {
-                    let is_final_bar = kline_event.kline.is_final_bar.clone();
-                    if is_final_bar {
-                        let dp = record::Record {
-                            date: (kline_event.event_time / 1000_u64) as u64,
-                            high: kline_event.kline.high.parse::<f64>().unwrap(),
-                            low: kline_event.kline.low.parse::<f64>().unwrap(),
-                            open: kline_event.kline.open.parse::<f64>().unwrap(),
-                            close: kline_event.kline.close.parse::<f64>().unwrap(),
-                            volume: kline_event.kline.volume.parse::<f64>().unwrap(),
-                        };
-                        tx.send(dp).unwrap();
-                    }
+                    let dp = record::Record {
+                        exchange: record::Exchange::Binance,
+                        date: (kline_event.event_time) as u64,
+                        high: kline_event.kline.high.parse::<f64>().unwrap(),
+                        low: kline_event.kline.low.parse::<f64>().unwrap(),
+                        open: kline_event.kline.open.parse::<f64>().unwrap(),
+                        close: kline_event.kline.close.parse::<f64>().unwrap(),
+                        volume: kline_event.kline.volume.parse::<f64>().unwrap(),
+                    };
+                    tx.send(Ok(dp)).unwrap();
                 }
                 _ => (),
             };
@@ -92,6 +91,7 @@ impl Exchange for BinanceExchange {
             match e {
                 err => {
                     println!("Error: {:?}", err);
+                    tx.send(Err("Error in binance connection.")).unwrap();
                 }
             }
         }

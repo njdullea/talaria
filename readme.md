@@ -2,26 +2,13 @@
 
 ## Completed Steps
 - Pulling and formatting data from coinbase, binance, and kraken and saving to files in data folder.
-- Executing backtest and calculating fees over last 4 months.
+- Executing backtest for confirmation of historical price discrepancies.
+- Connecting to exchanges (FTX and Kucoin) and monitoring current prices for symbol.
+- Placing orders to each exchange when large price discrepancy occurs.
 
-## Next Step Ideas
-- Grab code for setting up websocket connection to binance.
-- Figure out how to setup websocket connection to kraken (lower fees than coinbase).
-- Transfer over XLM from coinbase to binance and kraken.
-- Update main to handle both websockets and buy/sell actions and run the program!!
-- Setup command line handling for: `-- backtest`, `-- prod`, `-- reload_data` and anything else.
-- Build a separate service for tracking exchange data?
-
-## Next Steps (smallest amount to running)
-- Setup BTreeMap for sorting records by datetime in backtest (helps resolve issue with gaps in time from maintenance)
-- Setup websocket connection to kraken using tunstenite. See binance crate for example.
-- Setup saving data and trade actions to files. 
-- Run with recording what actions would have occured and how it would have affected balance.
-- Run for real
-
-# CURRENT NEXT STEPS
-- SETUP WEBSOCKET TO KUCOIN AND RUN TALARIA SAVING WHAT ACTIONS WE WOULD PERFORM TO FILE!
+## Testing and Results
+I setup about $150 on FTX and Kucoin, and would sell on one and buy on the other when a large price discrepancy. After testing for several days I found the slippage from market orders would cover any profits, and limit orders were too likely to not be accepted. It was great at wash trading though!
  
 ## Notes
 - Kraken OHLC data doesn't seem to let requests go before a certain prior date.
-- Coinbase OR binance seem to only work with a max length of 4 weeks. Not sure which one or why.
+- Coinbase OR binance seem to only work with a max length of 4 weeks.
